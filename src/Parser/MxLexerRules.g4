@@ -26,21 +26,21 @@ Mod : '%';
 Plus : '+';
 Minus : '-';
 
-Caret: '^';
+Caret : '^';
 And : '&';
 Or : '|';
-Tilde: '~';
+Tilde : '~';
 Not : '!';
 LeftShift : '<<';
 RightShift : '>>';
 
-Assign: '=';
-Less: '<';
-Greater: '>';
-Equal: '==';
-NotEqual: '!=';
-LessEqual: '<=';
-GreaterEqual: '>=';
+Assign : '=';
+Less : '<';
+Greater : '>';
+Equal : '==';
+NotEqual : '!=';
+LessEqual : '<=';
+GreaterEqual : '>=';
 
 AndAnd : '&&';
 OrOr : '||';
@@ -48,15 +48,15 @@ PlusPlus : '++';
 MinusMinus : '--';
 
 //------------------------------special symbols
-LeftParen: '(';
-RightParen: ')';
-LeftBracket: '[';
-RightBracket: ']';
-LeftBrace: '{';
-RightBrace: '}';
-Comma: ',';
-Semi: ';';
-Dot: '.';
+LeftParen : '(';
+RightParen : ')';
+LeftBracket : '[';
+RightBracket : ']';
+LeftBrace : '{';
+RightBrace : '}';
+Comma : ',';
+Semi : ';';
+Dot : '.';
 
 //fragment 类似于 private
 fragment Digit : [0-9];
@@ -73,6 +73,6 @@ BoolLiteral : True | False;
 Identifier : [A-Za-z] [A-Za-z0-9_]*;    //标识符
 
 Whitespace : [ \t]+ -> skip;      //skip表示匹配后丢弃
-Newline: ('\r' '\n'? | '\n') -> skip;
-BlockComment: '/*' .*? '*/' -> skip; //*后面的?表示非贪婪匹配(尽量短)
+Newline : ('\r' '\n'? | '\n') -> skip;
+BlockComment : '/*' .*? '*/' -> skip; //*后面的?表示非贪婪匹配(尽量短)
 LineComment : '//' ~ [\r\n]* -> skip;
