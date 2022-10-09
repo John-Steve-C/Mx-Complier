@@ -68,7 +68,7 @@ forInitStatement :          // for循环起始条件
     | Semi;
 
 //---------------------------------------expression
-//表达式的最外层分类
+//表达式的最底层分类
 primaryExpression :
 	literal
 	| This
