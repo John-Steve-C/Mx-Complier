@@ -1,12 +1,10 @@
 package AST;
 
-import Utility.position;
-
-import java.util.ArrayList;
+import Utility.Position;
 
 public class logicOrExpressionNode extends expressionNode{
 
-    public logicOrExpressionNode(position pos) {super(pos);}
+    public logicOrExpressionNode(Position pos) {super(pos);}
 
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}

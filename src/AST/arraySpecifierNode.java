@@ -1,13 +1,14 @@
 package AST;
 
-import java.lang.reflect.Type;
-import Utility.position;
+import Utility.Position;
+import Utility.Type.Type;
+
 public class arraySpecifierNode extends ASTNode {
 
     public String type = null;
     public int emptyBracketPair = 0;
     public Type typeInfo = null;
-    public arraySpecifierNode(position pos) {
+    public arraySpecifierNode(Position pos) {
         super(pos);
     }
 

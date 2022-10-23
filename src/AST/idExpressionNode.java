@@ -1,12 +1,12 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
 
 public class idExpressionNode extends expressionNode{
 
     public String content = null;
 
-    public idExpressionNode(position pos) {super(pos);}
+    public idExpressionNode(Position pos) {super(pos);}
 
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}

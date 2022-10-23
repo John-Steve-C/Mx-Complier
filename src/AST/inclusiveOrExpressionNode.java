@@ -1,10 +1,10 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
 
 public class inclusiveOrExpressionNode extends expressionNode{
 
-    public inclusiveOrExpressionNode(position pos) {super(pos);}
+    public inclusiveOrExpressionNode(Position pos) {super(pos);}
 
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}

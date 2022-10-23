@@ -1,11 +1,15 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
+
 public class functionDefNode extends ASTNode{
 
-    public String retType = null;
+    public arraySpecifierNode retType = null;
+    public String funcName = null;
+    public functionParameterDefNode funcPar = null;
+    public compoundStatementNode compoundStmt = null;
 
-    public functionDefNode(position pos) {super(pos);}
+    public functionDefNode(Position pos) {super(pos);}
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}
 }

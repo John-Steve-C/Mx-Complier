@@ -1,12 +1,15 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
+import Utility.Type.FuncType;
+
 public class primaryExpressionNode extends expressionNode{
 
     public expressionNode expr = null;
+    public FuncType func = null;
     public boolean isThis = false, isLambda = false, isLiteral = false, isExpr = false, isIdExpr = false;
 
-    public primaryExpressionNode(position pos) {super(pos);}
+    public primaryExpressionNode(Position pos) {super(pos);}
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}
 }

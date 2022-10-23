@@ -1,10 +1,10 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
 
 public class andExpressionNode extends expressionNode{
 
-    public andExpressionNode(position pos) {super(pos);}
+    public andExpressionNode(Position pos) {super(pos);}
 
     @Override
     public void accept(ASTVisitor visitor) {

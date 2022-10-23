@@ -478,6 +478,56 @@ public interface MxListener extends ParseTreeListener {
 	 */
 	void exitConstructFunctionDefinition(MxParser.ConstructFunctionDefinitionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MxParser#theEqualOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterTheEqualOp(MxParser.TheEqualOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#theEqualOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitTheEqualOp(MxParser.TheEqualOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#theCmpOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterTheCmpOp(MxParser.TheCmpOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#theCmpOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitTheCmpOp(MxParser.TheCmpOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#theShiftOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterTheShiftOp(MxParser.TheShiftOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#theShiftOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitTheShiftOp(MxParser.TheShiftOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#thePlusMinusOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterThePlusMinusOp(MxParser.ThePlusMinusOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#thePlusMinusOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitThePlusMinusOp(MxParser.ThePlusMinusOpContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link MxParser#theStarDivModOp}.
+	 * @param ctx the parse tree
+	 */
+	void enterTheStarDivModOp(MxParser.TheStarDivModOpContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MxParser#theStarDivModOp}.
+	 * @param ctx the parse tree
+	 */
+	void exitTheStarDivModOp(MxParser.TheStarDivModOpContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MxParser#theOperator}.
 	 * @param ctx the parse tree
 	 */

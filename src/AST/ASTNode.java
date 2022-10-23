@@ -1,11 +1,11 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
 
 abstract public class ASTNode {
-    public position pos;
+    public Position pos;
 
-    public ASTNode(position pos) {
+    public ASTNode(Position pos) {
         this.pos = pos;
     }
     abstract public void accept(ASTVisitor visitor);

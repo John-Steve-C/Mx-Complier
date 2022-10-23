@@ -1,11 +1,12 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
+
 public class assignExpressionNode extends expressionNode{
 
     public logicOrExpressionNode logicExpr = null;
 
-    public assignExpressionNode(position pos) {super(pos);}
+    public assignExpressionNode(Position pos) {super(pos);}
 
     @Override
     public void accept(ASTVisitor visitor) {visitor.visit(this);}

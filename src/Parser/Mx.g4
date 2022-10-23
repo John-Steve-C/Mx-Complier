@@ -117,27 +117,27 @@ newArrayType :
 //利用嵌套顺序来确定运算优先级
 multiplicativeExpression :
     unaryExpression (
-        (Star | Div | Mod) unaryExpression
+        theStarDivModOp unaryExpression
     )*;
 
 additiveExpression :
     multiplicativeExpression (
-        (Plus | Minus) multiplicativeExpression
+        thePlusMinusOp multiplicativeExpression
     )*;
 
 shiftExpression :
     additiveExpression (
-        (RightShift | LeftShift) additiveExpression
+        theShiftOp additiveExpression
     )*;
 
 relationalExpression :
     shiftExpression (
-        (Less | Greater | LessEqual | GreaterEqual) shiftExpression
+        theCmpOp shiftExpression
     )*;
 
 equalityExpression :
     relationalExpression (
-        (Equal | NotEqual) relationalExpression
+        theEqualOp relationalExpression
     )*;
 
 andExpression : equalityExpression (And equalityExpression)*;
@@ -175,6 +175,20 @@ memberDeclaration:
 constructFunctionDefinition: Identifier LeftParen RightParen compoundStatement;
 
 // 一些 Lexer 的集合
+// 之所以要写成集合，是为了在 ctx 中统一调用，而不是逐个判断
+theEqualOp:
+    Equal
+    |NotEqual;
+
+theCmpOp:
+    Less | Greater | LessEqual | GreaterEqual;
+
+theShiftOp:RightShift | LeftShift;
+
+thePlusMinusOp:Plus | Minus;
+
+theStarDivModOp:Star | Div | Mod;
+
 theOperator :
     New (LeftBracket RightBracket)?
     | Plus

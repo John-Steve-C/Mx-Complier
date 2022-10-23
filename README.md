@@ -34,7 +34,7 @@
       `expressionNode` 是分叉的，统统称为 `binaryExpression`，方便用 if 区分
 
 
-- [ ] 将 Antlr 生成的 CST 重载，舍弃一部分信息，生成 AST，重载相关结点与函数
+- [x] 将 Antlr 生成的 CST 重载，舍弃一部分信息，生成 AST，重载相关结点与函数
 
     即实现一个 `ASTBuilder.java` 以及相应的 `node.java, visitor.java`
 
@@ -61,7 +61,11 @@
   >
   > 并且所有的 `expressionNode` 都以之为基类。
 
-- [ ] 进行 Semantic Check
+- [ ] 进行 Semantic Check，检查是否满足语法规则
+  - [x] 实现 scope/globalScope 类，存储变量的作用范围（使用 `Hashmap` 实现）
+  - [x] Error类，用来 throw 错误信息
+  - [x] 自行实现 Type/ClassType/FuncType，用来存储 ASTNode 中的信息，进行比较判断
+  - [ ] 判断变量是否重名，以及赋值表达式是否符合变量类型
   
 ### Codegen
 

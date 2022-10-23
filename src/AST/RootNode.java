@@ -1,10 +1,13 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
+
+import java.util.ArrayList;
 
 public class RootNode extends ASTNode{
+    public ArrayList<declarationNode> decList = null;
 
-    public RootNode(position pos) {
+    public RootNode(Position pos) {
         super(pos);
     }
 

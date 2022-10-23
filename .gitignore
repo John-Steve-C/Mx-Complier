@@ -1,5 +1,7 @@
 out/
-src/test
 gen/
+testcases/
 
 thoughts.md
+antlr-4.10.1-complete.jar
+antlr-4.11.1-complete.jar

@@ -1,12 +1,14 @@
 package AST;
 
-import Utility.position;
+import Utility.Position;
 
 public class declarationNode extends ASTNode{
 
-    public String type = null;
+    public boolean isDeclareStmt = false, isFuncDef = false;
+    public functionDefNode funcDef = null;
+    public declarationStatementNode declStmt = null;
 
-    public declarationNode(position pos) {
+    public declarationNode(Position pos) {
         super(pos);
     }
 
