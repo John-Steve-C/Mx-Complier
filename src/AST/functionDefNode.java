@@ -8,6 +8,7 @@ public class functionDefNode extends ASTNode{
     public String funcName = null;
     public functionParameterDefNode funcPar = null;
     public compoundStatementNode compoundStmt = null;
+    public boolean isConstructFunc = false;
 
     public functionDefNode(Position pos) {super(pos);}
     @Override

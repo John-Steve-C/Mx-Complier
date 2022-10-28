@@ -4,7 +4,7 @@ import Utility.Position;
 
 public class newExpressionNode extends expressionNode{
 
-    public String type = null;
+    public String typeName = null;
     public newArrayTypeNode newArray = null;
 
     public newExpressionNode(Position pos) {super(pos);}

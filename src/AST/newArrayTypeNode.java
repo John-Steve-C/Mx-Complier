@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class newArrayTypeNode extends arraySpecifierNode{
 
-    public ArrayList<String> length = null;
+    public ArrayList<expressionNode> lengths = null;
 
     public newArrayTypeNode(Position pos) {super(pos);}
 

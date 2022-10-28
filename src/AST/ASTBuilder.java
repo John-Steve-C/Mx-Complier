@@ -19,8 +19,8 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
         RootNode root = new RootNode(new Position(ctx));
 
-        root.decList = new ArrayList<>();
-        ctx.declarationseq().declaration().forEach(it -> root.decList.add((declarationNode) visit(it)));
+        root.declList = new ArrayList<>();
+        ctx.declarationseq().declaration().forEach(it -> root.declList.add((declarationNode) visit(it)));
         return root;
     }
 
@@ -41,7 +41,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
         node.name = ctx.classHead().Identifier().getText();
         if (ctx.memberDeclaration() != null) {
-            node.declareList = new ArrayList<>();
+            node.declList = new ArrayList<>();
             ctx.memberDeclaration().forEach(it -> {
                 if (it.constructFunctionDefinition() != null) {
                     node.constructFunc = (functionDefNode) visit(it.constructFunctionDefinition());
@@ -54,7 +54,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
                         dec.isFuncDef = true;
                         dec.funcDef = (functionDefNode) visit(it.functionDefinition());
                     }
-                    node.declareList.add(dec);
+                    node.declList.add(dec);
                 }
             });
         }
@@ -284,8 +284,8 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         if (ctx.buildInType() != null) node.type = ctx.buildInType().getText();
         else node.type = ctx.Identifier().getText();
         node.emptyBracketPair = ctx.LeftBracket().size();
-        node.length = new ArrayList<>();
-        ctx.expression().forEach(it -> node.length.add(it.getText()));
+        node.lengths = new ArrayList<>();
+        ctx.expression().forEach(it -> node.lengths.add((expressionNode) visit(it)));
 
         return node;
     }
@@ -294,8 +294,8 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitNewExpression(MxParser.NewExpressionContext ctx) {
         newExpressionNode node = new newExpressionNode(new Position(ctx));
 
-        if (ctx.buildInType() != null) node.type = ctx.buildInType().getText();
-        else if (ctx.Identifier() != null) node.type = ctx.Identifier().getText();
+        if (ctx.buildInType() != null) node.typeName = ctx.buildInType().getText();
+        else if (ctx.Identifier() != null) node.typeName = ctx.Identifier().getText();
         else node.newArray = (newArrayTypeNode) visit(ctx.newArrayType());
         return node;
     }
@@ -309,18 +309,13 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         } else {
             if (ctx.LeftBracket() != null) {
                 node.isBracket = true;
-                node.exprList = new ArrayList<>();
-                node.exprList.add((expressionNode) visit(ctx.expression()));
+                node.expr = (expressionNode) visit(ctx.expression());
             } else if (ctx.LeftParen() != null) {
                 node.isParen = true;
-                if (ctx.expression() != null) {
-                    node.exprList = new ArrayList<>();
-                    node.exprList.add((expressionNode) visit(ctx.expression()));
-                }
+                if (ctx.expression() != null) node.expr = (expressionNode) visit(ctx.expression());
             } else if (ctx.Dot() != null) {
                 node.isDot = true;
-                node.exprList = new ArrayList<>();
-                node.exprList.add((expressionNode) visit(ctx.idExpression()));
+                node.expr = (idExpressionNode) visit(ctx.idExpression());
             } else if (ctx.PlusPlus() != null) {
                 node.isPlusPlus = true;
             } else {
@@ -519,4 +514,14 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         node.compoundStmt = (compoundStatementNode) visit(ctx.compoundStatement());
         return node;
     }
+
+    @Override
+    public ASTNode visitConstructFunctionDefinition(MxParser.ConstructFunctionDefinitionContext ctx) {
+        functionDefNode funcDef = new functionDefNode(new Position(ctx));
+        funcDef.funcName = ctx.Identifier().getText();
+        funcDef.isConstructFunc = true;
+        funcDef.compoundStmt = (compoundStatementNode) visit(ctx.compoundStatement());
+        return funcDef;
+    }
+
 }

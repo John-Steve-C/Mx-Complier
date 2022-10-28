@@ -9,14 +9,17 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 
 public class Compiler
 {
     public static void main(String[] args) throws IOException
     {
-//        InputStream input = System.in;
-        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/src/array-1.mx");
+        InputStream input_stream = System.in;
+        CharStream input = CharStreams.fromStream(input_stream);
+//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/basic-package/basic-67.mx");
+
         try
         {
             // Sort of MxLexer & Parser
@@ -34,15 +37,14 @@ public class Compiler
             ASTBuilder astBuilder = new ASTBuilder(gScope);
             ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
 
-            BuildinInit x = null;
-            x.init(gScope);
+            new SymbolCollector(gScope).visit(ASTRoot);
 
             SemanticChecker semanticChecker = new SemanticChecker(gScope);
             semanticChecker.visit(ASTRoot);
 
             // Sort of IRBuilder, maybe opt
             // Sort of ASMBuilder, maybe opt
-            BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
+//            BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
         }
         catch (Error err)
         {

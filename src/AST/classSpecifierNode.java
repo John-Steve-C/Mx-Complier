@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class classSpecifierNode extends ASTNode{
 
     public String name = null;
-    public ArrayList<declarationNode> declareList = null;
+    public ArrayList<declarationNode> declList = null;
     public functionDefNode constructFunc = null;
 
     public classSpecifierNode(Position pos) {

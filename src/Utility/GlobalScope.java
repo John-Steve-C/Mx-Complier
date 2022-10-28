@@ -39,10 +39,12 @@ public class GlobalScope extends Scope{
 
     public void addVarType(Type t, String name, Position pos) {
         if (types.containsKey(name)) throw new SemanticError(pos,"multiple definition");
+        if (funcTypes.containsKey(name)) throw new SemanticError(pos, "name conflict with the function");
         types.put(name, t);
     }
 
     public void addFuncType(FuncType func, String name, Position pos) {
+        if (types.containsKey(name)) throw new SemanticError(pos, "name conflict with the class");
         if (funcTypes.containsKey(name)) throw new SemanticError(pos, "function re-definition");
         funcTypes.put(name,func);
     }
@@ -71,7 +73,7 @@ public class GlobalScope extends Scope{
 
     // 查找 class ’name‘ 中是否存在 'member' 函数类型的成员
     public FuncType queryMemberFuncType(String name, String member, Position pos) {
-        if (funcTypes.containsKey(name)) {
+        if (types.containsKey(name)) {
             Type t = types.get(name);
             if (t.kind == Type.Types.CLASS_TYPE)
                 return ((ClassType) t).method.getOrDefault(member, null);
