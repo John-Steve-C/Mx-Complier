@@ -4,7 +4,8 @@ import Utility.Position;
 
 public class selectionStatementNode extends statementNode{
 
-    public statementNode cond = null, trueStmt = null, falseStmt = null;
+    public statementNode trueStmt = null, falseStmt = null;
+    public expressionNode cond = null;
 
     public selectionStatementNode(Position pos) {super(pos);}
 

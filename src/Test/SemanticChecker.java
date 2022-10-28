@@ -107,7 +107,6 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(selectionStatementNode it) {
         it.cond.accept(this);
-        if (it.cond.isEmpty) throw new SemanticError(it.cond.pos, "condition can't be empty");
         if (it.cond.type.kind != Type.Types.BOOL_TYPE)
             throw new SemanticError(it.cond.pos, "condition's result isn't a bool");
 

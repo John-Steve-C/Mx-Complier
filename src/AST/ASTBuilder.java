@@ -391,7 +391,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitSelectionStatement(MxParser.SelectionStatementContext ctx) {
         selectionStatementNode node = new selectionStatementNode(new Position(ctx));
 
-        node.cond = (statementNode) visit(ctx.condition());
+        node.cond = (expressionNode) visit(ctx.condition());
         node.trueStmt = (statementNode) visit(ctx.trueStatement);
         if (ctx.Else() != null) node.falseStmt = (statementNode) visit(ctx.falseStatement);
         return node;
