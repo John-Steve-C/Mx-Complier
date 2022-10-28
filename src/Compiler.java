@@ -16,9 +16,9 @@ public class Compiler
 {
     public static void main(String[] args) throws IOException
     {
-        InputStream input_stream = System.in;
-        CharStream input = CharStreams.fromStream(input_stream);
-//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/array-package/array-7.mx");
+//        InputStream input_stream = System.in;
+//        CharStream input = CharStreams.fromStream(input_stream);
+        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/misc-package/misc-12.mx");
 
         try
         {

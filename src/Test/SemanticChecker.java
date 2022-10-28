@@ -253,7 +253,7 @@ public class SemanticChecker implements ASTVisitor {
                         expr.type.dimension != it.type.dimension)
                     throw new SemanticError(expr.pos, "type doesn't match in assignment");
             } else if (it.logicExpr.type.kind != Type.Types.CLASS_TYPE && it.logicExpr.type.dimension == 0
-                    || !Objects.equals(it.logicExpr.type.name, "string") && it.logicExpr.type.dimension == 0)
+                    || Objects.equals(it.logicExpr.type.name, "string") && it.logicExpr.type.dimension == 0)
                 throw new SemanticError(it.pos, "can't assign null to !(class or array)");
             // null can only be assigned to class or array
         }
