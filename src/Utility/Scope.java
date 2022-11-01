@@ -22,11 +22,9 @@ public class Scope {
         members.put(name, t);
     }
 
-    public boolean containVar(String name, boolean checkGlobal) {
-        if (parentScope == null && !checkGlobal) return false;
-        // parentScope=null 表示目前scope就是global,如果还不用查global就矛盾了
+    public boolean containVar(String name, boolean checkUp) {
         if (members.containsKey(name)) return true;
-        if (parentScope != null && checkGlobal) return parentScope.containVar(name, checkGlobal);
+        else if (parentScope != null && checkUp) return parentScope.containVar(name, checkUp);
 
         return false;
     }
