@@ -89,14 +89,15 @@ public class SemanticChecker implements ASTVisitor {
     public void visit(compoundStatementNode it) {
         if (it.stmtList != null) {
             boolean temp = false;
+            // 说明是由lambda表达式进入的
             if (!funcSuite) currentScope = new Scope(currentScope);
-            else {
+            else {  // 由函数进入的，已经有新的scope
                 funcSuite = false;
                 temp = true;
             }
 
             it.stmtList.forEach(stmt -> stmt.accept(this));
-            // If it's a suite, you should step out in the end.
+            // 如果不是函数嵌套, 需要手动退出当前空间
             if (!temp) currentScope = currentScope.parentScope;
         }
     }

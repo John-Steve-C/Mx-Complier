@@ -81,7 +81,7 @@ idExpression : Identifier;
 // lambda 表达式，比c++精简
 lambdaExpression : lambdaIntroducer lambdaDeclarator '->'  compoundStatement;
 
-lambdaIntroducer : LeftBracket And RightBracket;
+lambdaIntroducer : LeftBracket And? RightBracket;
 
 lambdaDeclarator :
     (LeftParen functionParameterDef? RightParen)?;

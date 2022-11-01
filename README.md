@@ -10,7 +10,7 @@
 
 ### Semantic
 
-利用 antlr 实现语义分析
+利用 antlr 实现语义分析，以及语法的检查
 
 更具体地说，
 
@@ -41,32 +41,43 @@
     **目的**：对某些结点的信息进行重新收集，以提高读取时的效率
 
   > 大部分结点的重载和内容与 `g4` 文件相符合，除了 `expression.java` 类，它并不是包含 `assignmentExpression`，而是如下方：
-  >
-  > ```java
-  > public class expressionNode extends ASTNode{
-  >
-  >     public ArrayList<expressionNode> exprList = null;
-  >     public boolean isConst = false;
-  >
-  >     public expressionNode(position pos) {
-  >         super(pos);
-  >     }
-  >
-  >     @Override
-  >     public void accept(ASTVisitor visitor) {
-  >         visitor.visit(this);
-  >     }
-  > }
-  > ```
-  >
-  > 并且所有的 `expressionNode` 都以之为基类。
+  > >
+  > > ```java
+  > > public class expressionNode extends ASTNode{
+  > >
+  > >     public ArrayList<expressionNode> exprList = null;
+  > >     public boolean isConst = false;
+  > >
+  > >     public expressionNode(position pos) {
+  > >         super(pos);
+  > >     }
+  > >
+  > >     @Override
+  > >     public void accept(ASTVisitor visitor) { 
+  > >         // 作用：在semantic check时，用来访问其下方的结点，并得到对应信息
+  > >         visitor.visit(this);
+  > >     }
+  > > }
+  > > ```
+  > >
+  > > 并且所有的 `expressionNode` 都以之为基类。
+  > >
+  > >`statementNode` 的做法类似
 
-- [ ] 进行 Semantic Check，检查是否满足语法规则
-  - [x] 实现 scope/globalScope 类，存储变量的作用范围（使用 `Hashmap` 实现）
-  - [x] Error类，用来 throw 错误信息
-  - [x] 自行实现 Type/ClassType/FuncType，用来存储 ASTNode 中的信息，进行比较判断
-  - [ ] 判断变量是否重名，以及赋值表达式是否符合变量类型
-  
+- [x] 进行 Semantic Check，检查是否满足语法规则
+  - [x] 实现 `scope`/`globalScope` 类，存储变量的作用范围（使用 `Hashmap` 实现）
+  - [x] `Error` 类，用来 throw 错误信息，同时用 `pos` 来存储结点在 原代码 对应的位置。
+  - [x] 自行实现 `Type`/`ClassType`/`FuncType`，用来存储 ASTNode 中的信息，进行比较判断
+  - [x] 实现一个 `SymbolCollector`，先对 AST 进行遍历，把声明过的 class 都加入 `globalScope `  中。同时也要加入内置类型：int/void/bool/string(作为class存储)，内置函数：print/toString/size...
+  - 需要判断的地方（详细语法规则请参考 guide 中的 MxRules.md）
+    - 判断变量是否重名/有定义过
+    - 赋值表达式是否符合变量类型（对一系列`expressionNode`的运算做判断）
+    - 函数的返回值 (return) 是否符合变量类型。`main` 函数可以没有返回值，默认返回值为 `0`，否则只能为int。
+    - 函数/Lambda表达式 的嵌套问题，每进入一次就是一个新的scope
+    - ​
+
 ### Codegen
+
+
 
 ### Optimization

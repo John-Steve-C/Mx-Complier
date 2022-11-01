@@ -18,7 +18,7 @@ public class Compiler
     {
         InputStream input_stream = System.in;
         CharStream input = CharStreams.fromStream(input_stream);
-//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/misc-package/misc-12.mx");
+//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/lambda-package/lambda-3.mx");
 
         try
         {

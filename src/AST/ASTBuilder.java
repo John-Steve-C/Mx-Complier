@@ -117,6 +117,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitLambdaExpression(MxParser.LambdaExpressionContext ctx) {
         lambdaExpressionNode node = new lambdaExpressionNode(new Position(ctx));
 
+        if (ctx.lambdaIntroducer().And() != null) node.is_global = true;
         if (ctx.lambdaDeclarator() != null) {
             if (ctx.lambdaDeclarator().functionParameterDef() != null) {
                 node.funcPar = (functionParameterDefNode) visit(ctx.lambdaDeclarator().functionParameterDef());
