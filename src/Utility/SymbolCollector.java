@@ -5,7 +5,6 @@ import Utility.Type.*;
 import Utility.Error.SemanticError;
 import Utility.GlobalScope;
 
-import java.lang.instrument.ClassDefinition;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -120,14 +119,7 @@ public class SymbolCollector implements ASTVisitor {
                 }
             }
         });
-        it.declList.forEach(decl ->
-        {
-            if (decl.isFuncDef) decl.accept(this);
-        });
-        it.declList.forEach(decl ->
-        {
-            if (decl.isDeclareStmt) decl.accept(this);
-        });
+        it.declList.forEach(decl -> decl.accept(this));
     }
 
     @Override
@@ -158,16 +150,7 @@ public class SymbolCollector implements ASTVisitor {
     @Override
     public void visit(classSpecifierNode it) {
         currentStruct = (ClassType) globalScope.queryType(it.name, it.pos);
-        it.declList.forEach(decl -> {
-            if (decl.isDeclareStmt) {
-                decl.accept(this);
-            }
-        });
-        it.declList.forEach(decl -> {
-            if (decl.isFuncDef) {
-                decl.accept(this);
-            }
-        });
+        it.declList.forEach(decl -> decl.accept(this));
         if (it.constructFunc != null) it.constructFunc.accept(this);
         currentStruct = null;
     }

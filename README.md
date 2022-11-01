@@ -14,7 +14,7 @@
 
 更具体地说，
 
-1. 利用 antlr 把读入的字符串分解为一个个 token
+1. 利用 antlr 把读入的字符串分解为一个个 token，建立一棵 CST（antlr根据g4自动完成）
 2. 然后将其还原为 AST（Abstract Syntax Tree 语法树）
 3. 进行  Semantic Check（语义检查）
 
@@ -68,16 +68,19 @@
   - [x] 实现 `scope`/`globalScope` 类，存储变量的作用范围（使用 `Hashmap` 实现）
   - [x] `Error` 类，用来 throw 错误信息，同时用 `pos` 来存储结点在 原代码 对应的位置。
   - [x] 自行实现 `Type`/`ClassType`/`FuncType`，用来存储 ASTNode 中的信息，进行比较判断
-  - [x] 实现一个 `SymbolCollector`，先对 AST 进行遍历，把声明过的 class 都加入 `globalScope `  中。同时也要加入内置类型：int/void/bool/string(作为class存储)，内置函数：print/toString/size...
+  - [x] 实现一个 `SymbolCollector`，先对 AST 进行遍历，把声明过的 class 都加入 `globalScope `  中（只需要遍历第一层结点）。同时也要加入内置类型：int/void/bool/string(作为class存储)，内置函数：print/toString/size...
   - 需要判断的地方（详细语法规则请参考 guide 中的 MxRules.md）
     - 判断变量是否重名/有定义过
     - 赋值表达式是否符合变量类型（对一系列`expressionNode`的运算做判断）
     - 函数的返回值 (return) 是否符合变量类型。`main` 函数可以没有返回值，默认返回值为 `0`，否则只能为int。
     - 函数/Lambda表达式 的嵌套问题，每进入一次就是一个新的scope
-    - ​
 
 ### Codegen
 
+把上个阶段生成的AST转换为IR（IR,也就是中间代码(Intermediate Representation，也可以成为中间代码）
 
+然后用IR来生成最后的　`.s` 汇编文件。
 
 ### Optimization
+
+对 codegen 阶段进行优化，加快速度？

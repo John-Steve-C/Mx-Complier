@@ -658,7 +658,12 @@ public class SemanticChecker implements ASTVisitor {
         FuncType lambdaFunc = new FuncType();
         ++inLambda;
         // 与函数的判断类似
-        currentScope = new Scope(currentScope);
+
+        Scope tempScope = currentScope;
+        if (it.is_global) currentScope = new Scope(currentScope);
+        else currentScope = new Scope(null);
+        // 保证 lambda 函数的 scope 不能访问外部变量
+
         if (it.funcPar != null) {
             lambdaFunc.parameter = new ArrayList<>();
             it.funcPar.typeList.forEach(var -> {
@@ -679,7 +684,8 @@ public class SemanticChecker implements ASTVisitor {
         lambdaFunc.returnType = Objects.requireNonNullElseGet(lambdaReturnType, () -> new Type(Type.Types.VOID_TYPE));
         // 上式等价于一个三目运算符
         lambdaReturnType = parentLambdaRet;
-        currentScope = currentScope.parentScope;
+        if (it.is_global) currentScope = currentScope.parentScope;
+        else currentScope = tempScope;
         --inLambda;
         it.type = lambdaFunc;
     }
