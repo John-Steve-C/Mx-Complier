@@ -16,9 +16,11 @@
 
 1. 利用 antlr 把读入的字符串分解为一个个 token，建立一棵 CST（antlr根据g4自动完成）
 2. 然后将其还原为 AST（Abstract Syntax Tree 语法树）
-3. 进行  Semantic Check（语义检查）
+3. 进行 Semantic Check（语义检查）
 
 首先，你需要了解 antlr 的[基本语法](https://blog.csdn.net/pourtheworld/article/details/108304505?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522163324419316780255290255%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=163324419316780255290255&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-2-108304505.first_rank_v2_pc_rank_v29&utm_term=g4%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95&spm=1018.2226.3001.4187) 以及 [正则表达式的基本语法](https://www.runoob.com/regexp/regexp-syntax.html)
+
+有一个小问题：G4 匹配时，优先匹配最长的lexer，如果有多个，再匹配写在前面的 lexer（顺序上靠前）
 
 > 权威指南比较复杂，可以适当选择阅读。最后有语法规则详解，建议认真阅读
 
@@ -73,14 +75,38 @@
     - 判断变量是否重名/有定义过
     - 赋值表达式是否符合变量类型（对一系列`expressionNode`的运算做判断）
     - 函数的返回值 (return) 是否符合变量类型。`main` 函数可以没有返回值，默认返回值为 `0`，否则只能为int。
-    - 函数/Lambda表达式 的嵌套问题，每进入一次就是一个新的scope
+    - 函数/Lambda表达式 的嵌套问题，每进入一次就是一个新的scope; 注意 & 符号限制了外部变量的访问
 
 ### Codegen
 
 把上个阶段生成的AST转换为IR（IR,也就是中间代码(Intermediate Representation，也可以成为中间代码）
 
+用 IF 语句为例，实际上就是把原本树形的AST转化为一个个线性的 basic block（每个大写标识符之间的部分）
+
+```
+IF_COND
+  a>b
+  jump IF_ELSE
+IF_THEN
+  xxx
+  jump END
+IF_ELSE
+  yyy
+  jump END
+END      
+```
+
+当然，更复杂的，建议直接使用 LLVM 架构
+
+有一些必须实现/注意的点：
+- 高维数组
+- 短路求值
+- x86的指针与 RISCV32 的指针的区别
+
 然后用IR来生成最后的　`.s` 汇编文件。
 
 ### Optimization
 
-对 codegen 阶段进行优化，加快速度？
+对 codegen 阶段进行优化，加快速度
+
+包括图染色等算法？

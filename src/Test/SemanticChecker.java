@@ -60,6 +60,7 @@ public class SemanticChecker implements ASTVisitor {
                 func = currentStruct.method.get(it.funcName);
                 // illegal construct function
                 if (func.returnType.kind != Type.Types.NULL && Objects.equals(it.funcName, currentStruct.name))
+                    // todo: change to (|| not equal)
                     throw new SemanticError(it.pos, "illegal construct function");
             } else
                 throw new SemanticError(it.pos, "can't find function " + it.funcName + " in class " + currentStruct.name);
