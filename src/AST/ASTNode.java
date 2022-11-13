@@ -2,7 +2,7 @@ package AST;
 
 import Utility.Position;
 
-abstract public class ASTNode {
+public abstract class ASTNode {
     public Position pos;
 
     public ASTNode(Position pos) {

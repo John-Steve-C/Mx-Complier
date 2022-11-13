@@ -1,5 +1,8 @@
 package AST;
 
+import AST.Nodes.*;
+import AST.Nodes.Expression.*;
+import AST.Nodes.Statement.*;
 import Parser.MxParser;
 import Parser.MxBaseVisitor;
 import Utility.GlobalScope;

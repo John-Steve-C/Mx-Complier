@@ -2,7 +2,18 @@
 
 实现语言：Java
 
-分为三部分：
+### 简介
+
+一个编译器可以分为三部分：
+
+1. Frontend
+   词法分析、语法分析、语义分析、生成中间代码
+2. Optimizer
+   中间代码优化
+3. Backend
+   生成机器码
+
+而在我的实现上，分为以下三个阶段：
 
 - Semantic
 - Codegen
@@ -26,45 +37,18 @@
 
 - [x] 完成 `Mx.g4` 文件
 
-    有两种实现方法：（以 expression 的遍历为例）
+  有两种实现方法：（以 expression 的遍历为例）
 
-    - 参考 antlr 官方给的 `Cpp14Parser.g4` 实现（我的选择）
-      
-      语法树上的一系列 `expressionNode` 是一条长链，保存信息 **较麻烦**
-    - 利用 `#tag` 进行别名的命名。
-      
-      `expressionNode` 是分叉的，统统称为 `binaryExpression`，方便用 if 区分
-
+  - 参考 antlr 官方给的 `Cpp14Parser.g4` 实现（我的选择） 
+    语法树上的一系列 `expressionNode` 是一条长链，保存信息 **较麻烦**
+  - 利用 `#tag` 进行别名的命名。
+    `expressionNode` 是分叉的，统统称为 `binaryExpression`，方便用 if 区分
 
 - [x] 将 Antlr 生成的 CST 重载，舍弃一部分信息，生成 AST，重载相关结点与函数
-
-    即实现一个 `ASTBuilder.java` 以及相应的 `node.java, visitor.java`
-
-    **目的**：对某些结点的信息进行重新收集，以提高读取时的效率
-
-  > 大部分结点的重载和内容与 `g4` 文件相符合，除了 `expression.java` 类，它并不是包含 `assignmentExpression`，而是如下方：
-  > >
-  > > ```java
-  > > public class expressionNode extends ASTNode{
-  > >
-  > >     public ArrayList<expressionNode> exprList = null;
-  > >     public boolean isConst = false;
-  > >
-  > >     public expressionNode(position pos) {
-  > >         super(pos);
-  > >     }
-  > >
-  > >     @Override
-  > >     public void accept(ASTVisitor visitor) { 
-  > >         // 作用：在semantic check时，用来访问其下方的结点，并得到对应信息
-  > >         visitor.visit(this);
-  > >     }
-  > > }
-  > > ```
-  > >
-  > > 并且所有的 `expressionNode` 都以之为基类。
-  > >
-  > >`statementNode` 的做法类似
+  即实现一个 `ASTBuilder.java` 以及相应的 `node.java, visitor.java`
+  **目的**：对某些结点的信息进行重新收集，以提高读取时的效率
+  大部分结点的重载和内容与 `g4` 文件相符合，除了 `expression.java` 类，它并不是包含 `assignmentExpression`，而是一个`Arraylist<expressionNode>`，并且所有的 `expressionNode` 都以之为基类。
+  `statementNode` 的做法类似
 
 - [x] 进行 Semantic Check，检查是否满足语法规则
   - [x] 实现 `scope`/`globalScope` 类，存储变量的作用范围（使用 `Hashmap` 实现）
@@ -79,7 +63,8 @@
 
 ### Codegen
 
-把上个阶段生成的AST转换为IR（IR,也就是中间代码(Intermediate Representation，也可以成为中间代码）
+1. 把上个阶段生成的AST转换为IR（中间代码 Intermediate Representation，类似线性结构），然后用顺序遍历IR，输出一个 `llvm.ll` 文件
+2. 然后用 `llvm.ll` 生成最后的　`.s` 汇编文件
 
 用 IF 语句为例，实际上就是把原本树形的AST转化为一个个线性的 basic block（每个大写标识符之间的部分）
 
@@ -96,14 +81,49 @@ IF_ELSE
 END      
 ```
 
-当然，更复杂的，建议直接使用 LLVM 架构
+~~事实上，实现的ll远比它更复杂~~
+
+当然，建议直接使用 [LLVM](https://www.zhihu.com/column/c_1267851596689457152)，有利于第三阶段的优化
+
+LLVM（low level virtual machine）是一个开源编译器框架，能够提供程序语言的编译期优化、链接优化、在线编译优化、代码生成。
+
+> clang是一款基于llvm实现的轻量级C语言编译器
+
+还要学习 llvm IR 的语法规则，一些重要概念：
+
+- 数据存放的区域：Disk/Stack Memory/register
+- ~~可执行文件的符号表(与变量的可见性有关，在Mx中不需要实现)~~
+- Disk上的全局变量 `@global_variable`
+- 虚拟寄存器 `%1`，`%2`... 寄存器的速度远大于栈内存
+  - 需要模拟寄存器的分配
+- 栈上变量 `%local_variable = alloca i32` (我们定义的Mx没有指针)
+- 全局变量和栈上变量，都是指针
+- SSA(Static Single Assignment), 每个变量只能被赋值一次
+  - 把可变变量放到全局变量或者栈内变量里，虚拟寄存器只存储不可变的变量
+- `align 4`的意义就应该是：向4对齐，即便数据没有占用4个字节，也要为其分配4字节的内存
+- 聚合类型（结构体）的定义，聚合指针 `getelementptr`
+
+Todo:
+
+- [x] 实现 `IRType`，保存必要信息
+- [ ] 确定 IR 大致架构，分为哪些部分
+- [ ] 实现 `IRBuilder` 以及 `IRPrinter`
+- [ ] 在 `statement` 中，实现对某些 LLVM IR 指令的存储和翻译，比如 `alloca`, `br`...
+
+Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
+
+> 检查正确性：
+> 
+> `clang -S -emit-llvm test.c` ：从 test.c 生成 test.ll
+> 
+> `llc test.ll` ：从 test.ll 生成 test.s
+> 
+> `clang -S test.c` ：直接从test.c 生成 test.s
 
 有一些必须实现/注意的点：
 - 高维数组
 - 短路求值
 - x86的指针与 RISCV32 的指针的区别
-
-然后用IR来生成最后的　`.s` 汇编文件。
 
 ### Optimization
 

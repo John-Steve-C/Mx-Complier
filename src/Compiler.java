@@ -1,5 +1,7 @@
 import AST.*;
-import Test.SemanticChecker;
+import AST.Nodes.RootNode;
+import Frontend.SemanticChecker;
+import Frontend.SymbolCollector;
 import Utility.Error.Error;
 import Utility.*;
 import Parser.*;
@@ -38,11 +40,12 @@ public class Compiler
             ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
 
             new SymbolCollector(gScope).visit(ASTRoot);
-
             SemanticChecker semanticChecker = new SemanticChecker(gScope);
             semanticChecker.visit(ASTRoot);
 
             // Sort of IRBuilder, maybe opt
+            
+
             // Sort of ASMBuilder, maybe opt
 //            BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
         }
