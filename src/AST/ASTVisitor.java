@@ -1,8 +1,8 @@
 package AST;
 
-import AST.Nodes.*;
-import AST.Nodes.Expression.*;
-import AST.Nodes.Statement.*;
+import AST.Node.*;
+import AST.Node.Expression.*;
+import AST.Node.Statement.*;
 
 // 接口类型，实现多重继承
 // 类似 rust 的 trait

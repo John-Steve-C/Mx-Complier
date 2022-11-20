@@ -1,6 +1,7 @@
 package IR.Node;
 
 import Utility.Type.ClassType;
+import Utility.Type.IRType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

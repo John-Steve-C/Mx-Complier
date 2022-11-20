@@ -2,6 +2,7 @@ package Utility;
 
 import Utility.Error.SemanticError;
 import Utility.Type.*;
+import IR.Node.register;
 
 import java.util.HashMap;
 
@@ -9,7 +10,8 @@ public class Scope {
 
     // 变量名 到 变量类型 的映射
     public HashMap<String, Type> members;
-//    public HashMap<String, > entities = new HashMap<>();
+    // entity stands for var/inst in IR
+    public HashMap<String, register> entities = new HashMap<>();
     public Scope parentScope;
 
     public Scope(Scope parent) {
@@ -24,7 +26,7 @@ public class Scope {
 
     public boolean containVar(String name, boolean checkUp) {
         if (members.containsKey(name)) return true;
-        else if (parentScope != null && checkUp) return parentScope.containVar(name, checkUp);
+        else if (parentScope != null && checkUp) return parentScope.containVar(name, true);
 
         return false;
     }
@@ -32,6 +34,17 @@ public class Scope {
     public Type getType(String name, boolean checkUp) {
         if (members.containsKey(name)) return members.get(name);
         else if (parentScope != null && checkUp) return parentScope.getType(name, true);
+
+        return null;
+    }
+
+    public void linkReg(String name, register reg) {
+        entities.put(name, reg);
+    }
+
+    public register getEntity(String name, boolean checkUp) {
+        if (entities.containsKey(name)) return entities.get(name);
+        else if (parentScope != null && checkUp) return parentScope.getEntity(name, true);
 
         return null;
     }

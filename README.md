@@ -54,6 +54,7 @@
   - [x] 实现 `scope`/`globalScope` 类，存储变量的作用范围（使用 `Hashmap` 实现）
   - [x] `Error` 类，用来 throw 错误信息，同时用 `pos` 来存储结点在 原代码 对应的位置。
   - [x] 自行实现 `Type`/`ClassType`/`FuncType`，用来存储 ASTNode 中的信息，进行比较判断
+  - string is a special class, not a type. 所以Type中没有 `STRING_TYPE`，而是通过 `name = "string"`来区分
   - [x] 实现一个 `SymbolCollector`，先对 AST 进行遍历，把声明过的 class 都加入 `globalScope `  中（只需要遍历第一层结点）。同时也要加入内置类型：int/void/bool/string(作为class存储)，内置函数：print/toString/size...
   - 需要判断的地方（详细语法规则请参考 guide 中的 MxRules.md）
     - 判断变量是否重名/有定义过
@@ -83,7 +84,9 @@ END
 
 ~~事实上，实现的ll远比它更复杂~~
 
-当然，建议直接使用 [LLVM](https://www.zhihu.com/column/c_1267851596689457152)，有利于第三阶段的优化
+建议直接使用 [LLVM](https://www.zhihu.com/column/c_1267851596689457152)，有利于第三阶段的优化
+
+[LLVM指令集参考](https://blog.csdn.net/qq_37206105/article/details/115274241)
 
 LLVM（low level virtual machine）是一个开源编译器框架，能够提供程序语言的编译期优化、链接优化、在线编译优化、代码生成。
 
@@ -93,22 +96,24 @@ LLVM（low level virtual machine）是一个开源编译器框架，能够提供
 
 - 数据存放的区域：Disk/Stack Memory/register
 - ~~可执行文件的符号表(与变量的可见性有关，在Mx中不需要实现)~~
-- Disk上的全局变量 `@global_variable`
+- Disk上的全局变量 `@varName`
 - 虚拟寄存器 `%1`，`%2`... 寄存器的速度远大于栈内存
   - 需要模拟寄存器的分配
 - 栈上变量 `%local_variable = alloca i32` (我们定义的Mx没有指针)
 - 全局变量和栈上变量，都是指针
 - SSA(Static Single Assignment), 每个变量只能被赋值一次
   - 把可变变量放到全局变量或者栈内变量里，虚拟寄存器只存储不可变的变量
-- `align 4`的意义就应该是：向4对齐，即便数据没有占用4个字节，也要为其分配4字节的内存
+- `align 4` 的意义就应该是：向4对齐，即便数据没有占用4个字节，也要为其分配4字节的内存
 - 聚合类型（结构体）的定义，聚合指针 `getelementptr`
+- `use` 类，表示某个变量被调用
 
 Todo:
 
 - [x] 实现 `IRType`，保存必要信息
-- [ ] 确定 IR 大致架构，分为哪些部分
-- [ ] 实现 `IRBuilder` 以及 `IRPrinter`
+- [x] 确定 IR 大致架构，分为哪些部分
+- [ ] 完成具体的Nodes，比如 `classDef`
 - [ ] 在 `statement` 中，实现对某些 LLVM IR 指令的存储和翻译，比如 `alloca`, `br`...
+- [ ] 实现 `IRBuilder` 以及 `IRPrinter`
 
 Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 

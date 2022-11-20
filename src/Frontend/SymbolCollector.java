@@ -1,9 +1,9 @@
 package Frontend;
 
 import AST.*;
-import AST.Nodes.*;
-import AST.Nodes.Expression.*;
-import AST.Nodes.Statement.*;
+import AST.Node.*;
+import AST.Node.Expression.*;
+import AST.Node.Statement.*;
 import Utility.GlobalScope;
 import Utility.Type.*;
 import Utility.Error.SemanticError;
@@ -106,8 +106,7 @@ public class SymbolCollector implements ASTVisitor {
         globalScope.addFuncType(getStringFunc, "getString", it.pos);
         globalScope.addFuncType(getIntFunc, "getInt", it.pos);
         globalScope.addFuncType(toStringFunc, "toString", it.pos);
-        it.declList.forEach(decl ->
-        {
+        it.declList.forEach(decl -> {
             if (decl.isDeclareStmt) {
                 declarationStatementNode declStmt = (declarationStatementNode) decl.declStmt;
                 if (declStmt.isClassDef) {

@@ -1,6 +1,7 @@
 package Backend;
 
 import IR.Node.*;
+import IR.Node.Instruction.declare;
 import IR.Node.classDef;
 import IR.Node.funcDef;
 
@@ -11,5 +12,5 @@ public interface Pass {
     void visitClassDef(classDef cls);
     void visitGlobalVar(globalVarDeclaration decl);
     void visitGlobalString(globalStringConst str);
-    void visitDeclaration(declaration decl);
+    void visitDeclaration(declare decl);
 }

@@ -1,5 +1,5 @@
 import AST.*;
-import AST.Nodes.RootNode;
+import AST.Node.RootNode;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
 import Utility.Error.Error;

@@ -1,5 +1,7 @@
 package IR.Node;
 
+import Utility.Type.IRType;
+
 import java.util.ArrayList;
 
 public class funcDef {

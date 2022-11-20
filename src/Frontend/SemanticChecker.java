@@ -1,9 +1,9 @@
 package Frontend;
 
 import AST.*;
-import AST.Nodes.*;
-import AST.Nodes.Expression.*;
-import AST.Nodes.Statement.*;
+import AST.Node.*;
+import AST.Node.Expression.*;
+import AST.Node.Statement.*;
 import Utility.Error.SemanticError;
 import Utility.GlobalScope;
 import Utility.Position;

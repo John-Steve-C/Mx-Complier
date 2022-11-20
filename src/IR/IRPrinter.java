@@ -2,15 +2,17 @@ package IR;
 
 import Backend.Pass;
 import IR.Node.*;
-import IR.Node.IRType;
-import IR.Node.classDef;
-import IR.Node.funcDef;
+import IR.Node.Instruction.*;
+import Utility.Type.IRType;
 
 import java.io.PrintStream;
+import java.util.HashMap;
 
 public class IRPrinter implements Pass {
 
     private PrintStream output;
+    private int regCnt = 0;    //统计输出时使用虚拟寄存器的总数
+    private HashMap<register, Integer> regIndex = new HashMap<>();
 
     public IRPrinter(PrintStream out){
         output = out;
@@ -45,9 +47,43 @@ public class IRPrinter implements Pass {
         return ret.toString();
     }
 
+    public String getRegName(register r) {
+        if (regIndex.containsKey(r)) return "%" + regIndex.get(r);
+        r.regNum = regCnt;
+        regIndex.put(r, regCnt);
+        return "%" + (regCnt++);
+    }
+
+    public String getBlockName(block blk) {
+        return blk.name;
+    }
+
+    public void print(instruction inst) {
+        if (inst instanceof alloca a) {
+            output.print(getRegName(a.rd) + " = alloca " + getType(a.allocType) + ", align " + a.alignSpace);
+        } else if (inst instanceof br a) {
+            if (a.val == null) {
+                output.print("br label %" + getBlockName(a.trueBranch));
+            } else {
+                output.print("br i1 " + getRegName(a.val) + ", label %" + getBlockName(a.trueBranch)
+                                + ", label %" + getBlockName(a.falseBranch));
+            }
+        } else if (inst instanceof call a) {
+
+        } else if (inst instanceof store a) {
+
+        } else if (inst instanceof load a) {
+
+        } else if (inst instanceof icmp a) {
+            
+        }
+    }
+
     @Override
     public void visitBlock(block blk) {
-
+        output.print(blk.label + ":");
+        blk.stmt.forEach(inst -> {
+        });
     }
 
     @Override
@@ -57,10 +93,10 @@ public class IRPrinter implements Pass {
 
     @Override
     public void visitFuncDef(funcDef func) {
-        output.print("define " + func.retType + " @" + func.funcName + "(");
+        output.print("define " + getType(func.retType) + " @" + func.funcName + "(");
         int len = func.parameters.size();
 
-
+        register r;
 
         for (int i = 0;i < len - 1; ++i) {
             output.print(getType(func.parameters.get(i)) + " %" + i + ", ");
@@ -70,7 +106,6 @@ public class IRPrinter implements Pass {
         } else {
             output.print(")");
         }
-
 
 
         output.println();
@@ -92,7 +127,8 @@ public class IRPrinter implements Pass {
 
     @Override
     public void visitGlobalVar(globalVarDeclaration decl) {
-
+        output.print("@" + decl.name + " = global " + getType(decl.type)
+                    + " " + decl.reg.value.toString() + ", align " + decl.align);
     }
 
     @Override
@@ -101,7 +137,7 @@ public class IRPrinter implements Pass {
     }
 
     @Override
-    public void visitDeclaration(declaration decl) {
+    public void visitDeclaration(declare decl) {
 
     }
 
