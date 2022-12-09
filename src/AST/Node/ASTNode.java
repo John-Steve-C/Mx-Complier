@@ -1,5 +1,6 @@
-package AST;
+package AST.Node;
 
+import AST.ASTVisitor;
 import Utility.Position;
 
 public abstract class ASTNode {

@@ -1,6 +1,5 @@
 package AST.Node;
 
-import AST.ASTNode;
 import AST.ASTVisitor;
 import AST.Node.Expression.assignExpressionNode;
 import Utility.Position;

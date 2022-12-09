@@ -1,9 +1,8 @@
 package Utility;
 
 import Utility.Error.SemanticError;
-import Utility.Type.ClassType;
-import Utility.Type.FuncType;
-import Utility.Type.Type;
+import Utility.Type.*;
+import IR.Node.GlobalUnit.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +14,10 @@ public class GlobalScope extends Scope{
     public HashMap<String, FuncType> funcTypes = new HashMap<>();
     // 系统自带关键字集合
     public HashSet<String> Keywords = new HashSet<>();
+
+    // used in IR
+    public HashMap<String, classDef> idToClassDef = null;
+    public HashMap<String, funcDef> idToFuncDef = null;
 
     public GlobalScope(Scope parent) {
         super(parent);

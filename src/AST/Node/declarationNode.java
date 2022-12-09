@@ -1,6 +1,5 @@
 package AST.Node;
 
-import AST.ASTNode;
 import AST.ASTVisitor;
 import AST.Node.Statement.declarationStatementNode;
 import Utility.Position;

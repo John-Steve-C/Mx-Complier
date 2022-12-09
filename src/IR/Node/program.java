@@ -1,10 +1,10 @@
 package IR.Node;
 
-import IR.Node.Instruction.declare;
+import IR.Node.GlobalUnit.*;
 
 import java.util.ArrayList;
 
-public class program {
+public class Program {
 
     public ArrayList<funcDef> func = new ArrayList<>();
     public ArrayList<classDef> cls = new ArrayList<>();
@@ -12,27 +12,25 @@ public class program {
     public ArrayList<declare> decl = new ArrayList<>();
     public ArrayList<globalVarDeclaration> varDecl = new ArrayList<>();
     public ArrayList<globalStringConst> strConst = new ArrayList<>();
-    public funcDef mainFunc;
+    public funcDef mainFunc, builtinFunc;
 
-    public void add(funcDef node) {
+    public void push_back(funcDef node) {
         func.add(node);
     }
 
-    public void add(classDef node) {cls.add(node);}
+    public void push_back(classDef node) { cls.add(node);}
 
-    public void add(block node) {
+    public void push_back(block node) {
         blk.add(node);
     }
 
-    public void add(declare dec) {
+    public void push_back(declare dec) {
         decl.add(dec);
     }
 
-    public void add(globalVarDeclaration var){
-        varDecl.add(var);
-    }
+    public void push_back(globalVarDeclaration var) { varDecl.add(var); }
 
-    public void add(globalStringConst str) {
+    public void push_back(globalStringConst str) {
         strConst.add(str);
     }
 

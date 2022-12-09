@@ -1,7 +1,7 @@
 package AST.Node.Statement;
 
-import AST.ASTNode;
 import AST.ASTVisitor;
+import AST.Node.ASTNode;
 import Utility.Position;
 import Utility.Type.Type;
 

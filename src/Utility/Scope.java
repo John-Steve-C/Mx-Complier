@@ -2,7 +2,7 @@ package Utility;
 
 import Utility.Error.SemanticError;
 import Utility.Type.*;
-import IR.Node.register;
+import IR.TypeSystem.*;
 
 import java.util.HashMap;
 
@@ -11,7 +11,7 @@ public class Scope {
     // 变量名 到 变量类型 的映射
     public HashMap<String, Type> members;
     // entity stands for var/inst in IR
-    public HashMap<String, register> entities = new HashMap<>();
+    public HashMap<String, regTypePair> entities = new HashMap<>();
     public Scope parentScope;
 
     public Scope(Scope parent) {
@@ -38,11 +38,12 @@ public class Scope {
         return null;
     }
 
-    public void linkReg(String name, register reg) {
-        entities.put(name, reg);
+    // used for IR
+    public void linkReg(String name, register reg, IRType irType) {
+        entities.put(name, new regTypePair(reg, irType));
     }
 
-    public register getEntity(String name, boolean checkUp) {
+    public regTypePair getEntity(String name, boolean checkUp) {
         if (entities.containsKey(name)) return entities.get(name);
         else if (parentScope != null && checkUp) return parentScope.getEntity(name, true);
 

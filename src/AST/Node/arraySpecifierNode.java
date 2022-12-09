@@ -1,9 +1,7 @@
 package AST.Node;
 
-import AST.ASTNode;
 import AST.ASTVisitor;
 import Utility.Position;
-import Utility.Type.Type;
 
 public class arraySpecifierNode extends ASTNode {
 

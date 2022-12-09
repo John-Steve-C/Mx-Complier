@@ -3,7 +3,9 @@ package IR;
 import Backend.Pass;
 import IR.Node.*;
 import IR.Node.Instruction.*;
-import Utility.Type.IRType;
+import IR.Node.GlobalUnit.*;
+import IR.TypeSystem.IRType;
+import IR.TypeSystem.register;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -87,7 +89,7 @@ public class IRPrinter implements Pass {
     }
 
     @Override
-    public void visitProgram(program prog) {
+    public void visitProgram(Program prog) {
 
     }
 
