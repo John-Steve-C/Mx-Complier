@@ -2,7 +2,7 @@ package IR.Node.Instruction;
 
 import IR.TypeSystem.*;
 
-public class ret extends instruction{
+public class ret extends terminator {
     public entity value;
     public IRType irType;
 

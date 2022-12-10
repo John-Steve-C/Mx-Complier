@@ -6,7 +6,7 @@ import java.util.LinkedList;
 
 public class phi extends instruction {
     // used to implement the phi node in the SSA graph representing the function.
-    // 表示不同 block 之间的跳转过程
+    // 表示不同 block 之间跳转同名变量的区分
     // (block1, entity1) -> (b2, e2)
     public IRType rdType;
     public register rd;

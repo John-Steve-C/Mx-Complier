@@ -7,8 +7,11 @@ import AST.Node.Statement.*;
 import Utility.GlobalScope;
 import Utility.Type.*;
 import Utility.Error.SemanticError;
+import IR.Node.GlobalUnit.*;
+import IR.TypeSystem.*;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class SymbolCollector implements ASTVisitor {
     private GlobalScope globalScope;
@@ -24,6 +27,9 @@ public class SymbolCollector implements ASTVisitor {
             getIntFunc = new FuncType(Type.Types.FUNC_TYPE),
             toStringFunc = new FuncType(Type.Types.FUNC_TYPE),
             printlnIntFunc = new FuncType(Type.Types.FUNC_TYPE);
+
+    // For IR generation
+    private classDef currentClassDef = null;
 
     public SymbolCollector(GlobalScope gScope) {
         globalScope = gScope;
@@ -98,6 +104,14 @@ public class SymbolCollector implements ASTVisitor {
         toStringFunc.parameter = new ArrayList<>();
         toStringFunc.parameter.add(intType);
 
+        // IR generation
+        classDef stringDef =  new classDef();
+        globalScope.addClassDef("string", stringDef);
+        stringDef.name = "string";
+        stringDef.addMember(new IRType(32,1,0,null),null);
+        stringDef.addMember(new IRType(8,2,0,null),null);
+        globalScope.addClassDef("string", stringDef);
+
         //add build in functions into globalScope
         globalScope.addFuncType(printFunc, "print", it.pos);
         globalScope.addFuncType(printlnFunc, "println", it.pos);
@@ -116,6 +130,10 @@ public class SymbolCollector implements ASTVisitor {
                     classSpecifierNode c = (classSpecifierNode) declStmt.struct;
                     ClassType struct = new ClassType(Type.Types.CLASS_TYPE);
                     struct.name = c.name;   // remember to check the name!
+
+                    currentClassDef = new classDef();
+                    globalScope.addClassDef(c.name, currentClassDef);
+
                     globalScope.addVarType(struct, c.name, it.pos);
                 }
             }
@@ -136,6 +154,13 @@ public class SymbolCollector implements ASTVisitor {
             if (it.fail) throw new SemanticError(it.pos, "declarator statement error");
             Type t = new Type(globalScope.queryType(it.arraySpec.type, it.arraySpec.pos));
             t.dimension = it.arraySpec.emptyBracketPair;
+
+            // For IR generation
+            IRType tmpIrType;
+            if (t.kind == Type.Types.CLASS_TYPE) {
+                tmpIrType = new IRType(globalScope.getClassDef(t.name), t.dimension + 1, 0);
+            } else tmpIrType = new IRType(t);
+
             it.initList.forEach(declarator -> {
                 globalScope.checkNameConflict(declarator.id, declarator.pos);
                 // add to class as member
@@ -143,6 +168,9 @@ public class SymbolCollector implements ASTVisitor {
                     if (currentStruct.member.containsKey(declarator.id))
                         throw new SemanticError(declarator.pos, "redefinition of member " + declarator.id);
                     currentStruct.member.put(declarator.id, t);
+
+                    // For IR generation
+                    currentClassDef.addMember(tmpIrType.getPtr(), declarator.id);
                 }
             });
         }
@@ -151,9 +179,12 @@ public class SymbolCollector implements ASTVisitor {
     @Override
     public void visit(classSpecifierNode it) {
         currentStruct = (ClassType) globalScope.queryType(it.name, it.pos);
+        currentClassDef = globalScope.getClassDef(it.name);    // IR generation
+
         it.declList.forEach(decl -> decl.accept(this));
         if (it.constructFunc != null) it.constructFunc.accept(this);
         currentStruct = null;
+        currentClassDef = null;     //
     }
 
     @Override
@@ -180,6 +211,32 @@ public class SymbolCollector implements ASTVisitor {
             if (currentStruct.method.containsKey(it.funcName)) throw new SemanticError(it.pos, "redefinition of method " + it.funcName);
             currentStruct.method.put(it.funcName, func);
         } else globalScope.addFuncType(func, it.funcName, it.pos);
+
+        // For IR generation
+        funcDef currentFunc = new funcDef();
+        String idPrefix = ((currentStruct != null) ? "_" + currentStruct.name + "_" : "");
+        currentFunc.funcName = idPrefix + it.funcName;
+        globalScope.addFuncDef(currentFunc.funcName, currentFunc);
+        if (func.returnType.kind == Type.Types.CLASS_TYPE) {
+            currentFunc.returnType = new IRType(globalScope.getClassDef(func.returnType.name),func.returnType.dimension + 1,0);
+            if (Objects.equals(func.returnType.name, "string")) currentFunc.returnType.isString = true;
+        } else currentFunc.returnType = new IRType(func.returnType);
+        if (currentStruct != null) {
+            IRType tmpIrType = new IRType(globalScope.getClassDef(currentStruct.name),1,0);
+            currentFunc.parameters.add(tmpIrType);
+        }
+        if (it.funcPar != null) {
+            int loopLen = it.funcPar.idList.size();
+            for (int i = 0; i < loopLen;++i) {
+                Type t = func.parameter.get(i);
+                IRType tmpIrType;
+                if (t.kind == Type.Types.CLASS_TYPE) {
+                    tmpIrType = new IRType(globalScope.getClassDef(t.name),t.dimension+1,0);
+                    if (Objects.equals(t.name, "string")) tmpIrType.isString = true;
+                }else tmpIrType = new IRType(t);
+                currentFunc.parameters.add(tmpIrType);
+            }
+        }
     }
 
     @Override

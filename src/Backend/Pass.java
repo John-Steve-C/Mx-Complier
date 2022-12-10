@@ -9,11 +9,11 @@ import IR.Node.GlobalUnit.globalVarDeclaration;
 import IR.Node.Program;
 
 public interface Pass {
-    void visitBlock(block blk);
     void visitProgram(Program prog);
+    void visitBlock(block blk);
     void visitFuncDef(funcDef func);
     void visitClassDef(classDef cls);
     void visitGlobalVar(globalVarDeclaration decl);
     void visitGlobalString(globalStringConst str);
-    void visitDeclaration(declare decl);
+    void visitDeclare(declare decl);
 }

@@ -3,8 +3,8 @@ package IR.Node.Instruction;
 import IR.Node.*;
 import IR.TypeSystem.register;
 
-public class br extends instruction {
-    public register val;
+public class br extends terminator {
+    public register val;   // store condition
     public block trueBranch, falseBranch;
 
     public br(register val, block trueBranch, block falseBranch) {

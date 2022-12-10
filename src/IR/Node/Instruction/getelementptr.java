@@ -3,9 +3,12 @@ package IR.Node.Instruction;
 import IR.TypeSystem.*;
 
 // 计算出结构体（复合类型）内部的地址
+// 也可以计算数组某一个元素的地址
 public class getelementptr extends instruction {
     public register rd, rs;
     public entity locator1, locator2;
+    // locator1 :
+    // locator2 :
     public IRType rsType;
 
     public getelementptr(register rd, register rs, IRType rsType, entity locator1, entity locator2) {

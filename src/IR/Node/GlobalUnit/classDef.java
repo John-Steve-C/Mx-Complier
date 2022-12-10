@@ -12,7 +12,7 @@ public class classDef extends globalUnit {
     public ArrayList<IRTypeWithCounter> memberForAsm = new ArrayList<>();
     public HashMap<String, IRTypeWithCounter> memberType = new HashMap<>();
 
-    public int counter = 0, align = 1;
+    public int counter = 0, align = 1;  // counter 表示 第几个成员(index)
     private int sizeAlign1 = 0, sizeAlign2 = 0, sizeAlign4 = 0, sizeAlign8 = 0;
     private int currentAlign2, currentAlign4, currentAlign8;
 

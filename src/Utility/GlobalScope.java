@@ -90,4 +90,20 @@ public class GlobalScope extends Scope{
         if (types.containsKey(name)) throw new SemanticError(pos, name + "has conflicts with types");
         if (Keywords.contains(name)) throw new SemanticError(pos, name + "has conflicts with keywords");
     }
+
+    public classDef getClassDef(String name) {
+        return idToClassDef.get(name);
+    }
+
+    public funcDef getFuncDef(String name) {
+        return idToFuncDef.get(name);
+    }
+
+    public void addClassDef(String name, classDef newDef) {
+        idToClassDef.put(name, newDef);
+    }
+
+    public void addFuncDef(String name, funcDef newDef) {
+        idToFuncDef.put(name, newDef);
+    }
 }

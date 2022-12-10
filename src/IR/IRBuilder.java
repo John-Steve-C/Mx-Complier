@@ -17,7 +17,6 @@ import Utility.Type.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
-import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
     // build IR from AST
@@ -33,13 +32,14 @@ public class IRBuilder implements ASTVisitor {
     public HashMap<String, funcDef> idToFuncDef;
 
     private int initFuncCounter = 0;
-    public funcDef mainFunc = null, currentFunc = null, globalInit = null, builtInFunc = null;
+    public funcDef mainFunc = null, currentFunc = null, globalInit = new funcDef(), builtInFunc = new funcDef();
     private int loopDepth = 0, iterCount = 0, selectCount = 0;
 
     private FuncType lastCallFunc = null;
     private String lastCallId = null;
     private register lastFuncCaller = null;
     private IRType lastFuncCallerIRType = null;
+    private boolean funcSuite = false; // like semantic checker
 
     // some define constant & type;
     private IRType voidType = new IRType(), i1 = new IRType(1), i8 = new IRType(8), i32 = new IRType(32),
@@ -54,10 +54,10 @@ public class IRBuilder implements ASTVisitor {
         currentScope = globalScope = gscope;
 
         voidType.isVoid = true;
-        stringStar.isString = true;
-        stringDef = gscope.idToClassDef.get("string");
-        stringStar.cDef = stringDef;
-        program.push_back(stringDef);
+
+        globalInit.returnType = voidType;
+        globalInit.returnBlock = globalInit.rootBlock = new block(loopDepth);
+        globalInit.funcName = "_GLOBAL_";
 
         program.builtinFunc = builtInFunc;
 
@@ -65,6 +65,11 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private void builtInDeclareInit() {
+        stringStar.isString = true;
+        stringDef = globalScope.getClassDef("string");
+        stringStar.cDef = stringDef;
+        program.push_back(stringDef);
+
         // add string's member function
         declare declareStringLength = new declare(i32, "_string_length");
         declareStringLength.parameter.add(stringStar);
@@ -97,13 +102,13 @@ public class IRBuilder implements ASTVisitor {
         declareStringAppend.parameter.add(stringStar);
         declareStringAppend.parameter.add(stringStar);
         program.push_back(declareStringAppend);
-        builtInStringAppend = new funcDef("_string_stringAppend", stringStar, declareStringAppend.parameter);
+//        builtInStringAppend = new funcDef("_string_stringAppend", stringStar, declareStringAppend.parameter);
 
         declare declareStringGetStrcmp = new declare(i32, "_string_getStrcmp");
         declareStringGetStrcmp.parameter.add(stringStar);
         declareStringGetStrcmp.parameter.add(stringStar);
         program.push_back(declareStringGetStrcmp);
-        builtInStringGetStrcmp = new funcDef("_string_getStrcmp", i32, declareStringGetStrcmp.parameter);
+//        builtInStringGetStrcmp = new funcDef("_string_getStrcmp", i32, declareStringGetStrcmp.parameter);
 
         // add global built-in functions
         declare declareToString = new declare(stringStar, "toString");
@@ -156,8 +161,11 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(RootNode it) {
         it.declList.forEach(dec -> dec.accept(this));
-        if (initFuncCounter > 0) {
-
+        if (initFuncCounter > 0) {  // 调用 全局初始化函数
+            mainFunc.directCall.add(globalInit);
+            mainFunc.rootBlock.push_front(new call(null, voidType, "_GLOBAL_", globalInit));
+            globalInit.rootBlock.push_back(new ret(null, voidType));
+            program.push_back(globalInit);
         }
         program.mainFunc = mainFunc;
     }
@@ -195,13 +203,80 @@ public class IRBuilder implements ASTVisitor {
 
             alloca Alloca = new alloca(rd, tmpType);
             currentFunc.push_back(Alloca);
-//            currentBlock
+            currentBlock.push_back(new store(rs, rd, tmpType));
+        } else func = globalScope.queryFuncType(it.funcName, it.pos);
+
+        // return
+        if (func.returnType.kind != Type.Types.VOID_TYPE && func.returnType.kind != Type.Types.NULL) {
+            currentFunc.retReg = new register();
+            entity en;
+            if (currentFunc.returnType.ptrNum > 0) en = constVoid;
+            else en = constZero;
+            alloca Alloca = new alloca(currentFunc.retReg, currentFunc.returnType);
+            currentBlock.push_back(new store(en, currentFunc.retReg, currentFunc.returnType));
+            currentFunc.push_back(Alloca);
         }
+
+        // parameters
+        if (it.funcPar != null) {
+            int loopLen = it.funcPar.idList.size();
+            for (int i = 0; i < loopLen; ++i) {
+                String tmpId = it.funcPar.idList.get(i);
+                Type t = func.parameter.get(i);
+                register rd = new register(), rs = new register();
+                IRType tmpIrType;
+                if (t.kind == Type.Types.CLASS_TYPE) {
+                    tmpIrType = new IRType(idToClsDef.get(t.name), t.dimension + 1, 0);
+                    if (Objects.equals(t.name, "string") && t.dimension == 0) tmpIrType.isString = true;
+                } else tmpIrType = new IRType(t);
+                currentFunc.parameterRegs.add(rs);
+                currentScope.defineVar(tmpId, t, it.funcPar.pos);
+                currentScope.linkReg(tmpId, rd, tmpIrType.getPtr());
+                alloca Alloca = new alloca(rd, tmpIrType);
+                currentFunc.push_back(Alloca);
+                currentBlock.push_back(new store(rs, rd, tmpIrType));
+            }
+        }
+
+        funcSuite = true;
+        it.compoundStmt.accept(this);
+        if (currentBlock.tail == null) {
+            if (!(func.returnType.kind == Type.Types.VOID_TYPE || func.returnType.kind == Type.Types.NULL)) {
+                entity en;
+                if (currentFunc.returnType.ptrNum > 0) en = constVoid;
+                else en = constZero;
+                currentBlock.push_back(new store(en, currentFunc.retReg, currentFunc.returnType));
+            }
+            currentBlock.push_back(new br(null, currentFunc.returnBlock, null));
+        }
+
+        currentBlock = currentFunc.returnBlock;
+        entity rd = null;
+        if (currentFunc.retReg != null) {
+            rd = new register();
+            new load((register) rd, currentFunc.retReg, currentFunc.returnType.getPtr());
+            currentBlock.push_back(new load((register) rd, currentFunc.retReg, currentFunc.returnType.getPtr()));
+        }
+        ret retStmt = new ret(rd, currentFunc.returnType);
+        currentBlock.push_back(retStmt);
+        currentScope = currentScope.parentScope;
+        currentFunc = null;
     }
 
     @Override
     public void visit(compoundStatementNode it) {
-
+        if (it.stmtList != null) {
+            boolean flag = false;
+            if (!funcSuite) currentScope = new Scope(currentScope);
+            else {
+                funcSuite = false;
+                flag = true;
+            }
+            for (statementNode node : it.stmtList) {
+                node.accept(this);
+            }
+            if (!flag) currentScope = currentScope.parentScope;
+        }
     }
 
     @Override
@@ -210,17 +285,201 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(selectionStatementNode it) {
+        it.cond.accept(this);
+        block trueBlock = new block(loopDepth), falseBlock, coverBlock = new block(loopDepth);  // coverBlock 表示返回原本的 block
+        trueBlock.comment = "True block in " + currentFunc.funcName + " selectCount " + selectCount;
+        coverBlock.comment = "Cover block in " + currentFunc.funcName + " selectCount " + selectCount;
+        if (it.falseStmt != null) {
+            falseBlock = new block(loopDepth);
+            falseBlock.comment = "False block in " + currentFunc.funcName + " selectCount " + selectCount;
+            if (it.cond.rd instanceof constant con) {
+                // 条件固定，直接优化
+                coverBlock.jump = true;
+                if (con.getBoolValue()) {
+                    currentBlock.push_back(new br(null, trueBlock, null));
+                    trueBlock.jump = true;
+                    currentBlock = trueBlock;
+                    currentScope = new Scope(currentScope);
+                    it.trueStmt.accept(this);
+                    currentScope = currentScope.parentScope;
+                } else {
+                    currentBlock.push_back(new br(null, falseBlock, null));
+                    falseBlock.jump = true;
+                    currentBlock = falseBlock;
+                    currentScope = new Scope(currentScope);
+                    it.falseStmt.accept(this);
+                    currentScope = currentScope.parentScope;
+                }
+                currentBlock.push_back(new br(null, coverBlock, null));
+            } else {
+                register rdCmp;
+                if (it.cond.irType.intLen != 1) {
+                    rdCmp = new register();
+                    currentBlock.push_back(new convertOp(rdCmp, it.cond.rd, convertOp.convertType.TRUNC, i1, it.cond.irType));
+                } else rdCmp = (register) it.cond.rd;
+                currentBlock.push_back(new br(rdCmp, trueBlock, falseBlock));
+                trueBlock.jump = falseBlock.jump = coverBlock.jump = true;
 
+                currentBlock = trueBlock;
+                currentScope = new Scope(currentScope);
+                it.trueStmt.accept(this);
+                currentScope = currentScope.parentScope;
+                currentBlock.push_back(new br(null, coverBlock, null)); // 返回原本 block
+
+                currentBlock = falseBlock;
+                currentScope = new Scope(currentScope);
+                it.falseStmt.accept(this);
+                currentScope = currentScope.parentScope;
+                currentBlock.push_back(new br(null, coverBlock, null));
+            }
+            currentBlock = coverBlock;
+        } else {
+            // no False Branch
+            currentScope = new Scope(currentScope);
+            if (it.cond.rd instanceof constant con) {
+                coverBlock.jump = true;
+                if (con.getBoolValue()) {
+                    currentBlock.push_back(new br(null, trueBlock, null));
+                    trueBlock.jump = true;
+                    currentBlock = trueBlock;
+                    it.trueStmt.accept(this);
+                    currentBlock.push_back(new br(null, coverBlock, null));
+                } else {
+                    currentBlock.push_back(new br(null, coverBlock, null));
+                }
+            } else {
+                register rdCmp;
+                if (it.cond.irType.intLen != 1) {
+                    rdCmp = new register();
+                    currentBlock.push_back(new convertOp(rdCmp, it.cond.rd, convertOp.convertType.TRUNC, i1, it.cond.irType));
+                } else rdCmp = (register) it.cond.rd;
+                currentBlock.push_back(new br(rdCmp, trueBlock, coverBlock));
+                trueBlock.jump = coverBlock.jump = true;
+                currentBlock = trueBlock;
+                it.trueStmt.accept(this);
+                currentBlock.push_back(new br(null, coverBlock, null));
+            }
+            currentBlock = coverBlock;
+            currentScope = currentScope.parentScope;
+        }
+        selectCount++;
     }
 
     @Override
     public void visit(iterationStatementNode it) {
+        ++loopDepth;
+        currentScope = new Scope(currentScope);
+        block parentLoopExitBlock = loopExitBlock;
+        block parentLoopContinueBlock = loopContinueBlock;
+        
+        if (it.isFor) {
+            block body = new block(loopDepth), checkBlock = new block(loopDepth), exitBlock = new block(loopDepth), stepBlock = new block(loopDepth);
+            body.jump = checkBlock.jump = exitBlock.jump = true;
+            body.comment = "loop body " + currentFunc.funcName + " loopDepth " + loopDepth + " iterCount " + iterCount;
+            checkBlock.comment = "loop check block " + currentFunc.funcName + " loopDepth " + loopDepth + " iterCount " + iterCount;
+            exitBlock.comment = "loop exit block " + currentFunc.funcName + " loopDepth " + loopDepth + " iterCount " + iterCount;
+            stepBlock.comment = "loop increase block " + currentFunc.funcName + " loopDepth " + loopDepth + " iterCount " + iterCount;
 
+            if (it.stepExpr != null) {
+                stepBlock.jump = true;
+                loopContinueBlock = stepBlock;  // continue 直接进入下一次循环, 即 stepExpr
+            } else loopContinueBlock = checkBlock;  // 直接 check
+            loopExitBlock = exitBlock;
+            if (it.init != null) it.init.accept(this);
+            currentBlock.push_back(new br(null, checkBlock, null));
+
+            currentBlock = checkBlock;
+            if (it.cond != null) {
+                it.cond.accept(this);
+                currentBlock.push_back(new br((register) it.cond.rd, body, exitBlock));
+            } else { // no condition, dead loop
+                currentBlock.push_back(new br(null, body, null));
+                currentBlock.successors.add(exitBlock);
+            }
+
+            currentBlock = body;
+            it.todoStmt.accept(this);
+            if (it.stepExpr != null) {
+                currentBlock.push_back(new br(null, stepBlock, null));
+                currentBlock = stepBlock;
+                it.stepExpr.accept(this);
+            }
+            currentBlock.push_back(new br(null, checkBlock, null));
+            currentBlock = exitBlock;
+        } else {
+            // is while
+            // turn while to loop until for loop invariant
+            block body = new block(loopDepth), checkBlock = new block(loopDepth), exitBlock = new block(loopDepth), preHeader = new block(loopDepth);
+            loopExitBlock = exitBlock;
+            loopContinueBlock = checkBlock;
+            body.jump = checkBlock.jump = exitBlock.jump = preHeader.jump = true;
+            currentBlock.push_back(new br(null, preHeader, null));
+
+            currentBlock = preHeader;
+            it.cond.accept(this);
+            if (it.cond.rd instanceof constant con) {
+                if (con.getBoolValue()) {
+                    currentBlock.push_back(new br(null, body, null));
+                    currentBlock.successors.add(exitBlock);
+                } else currentBlock.push_back(new br(null, exitBlock, null));
+            } else currentBlock.push_back(new br((register) it.cond.rd, body, exitBlock));
+
+            currentBlock = body;
+            it.todoStmt.accept(this);
+            currentBlock.push_back(new br(null, checkBlock, null));
+
+            currentBlock = checkBlock;
+            it.cond.accept(this);
+            if (it.cond.rd instanceof constant con) {
+                if (con.getBoolValue()) {
+                    currentBlock.push_back(new br(null, body, null));
+                    currentBlock.successors.add(exitBlock);
+                } else currentBlock.push_back(new br(null, exitBlock, null));
+            } else currentBlock.push_back(new br((register) it.cond.rd, body, exitBlock));
+            currentBlock = exitBlock;
+        }
+        loopExitBlock = parentLoopExitBlock;
+        loopContinueBlock = parentLoopContinueBlock;
+        currentScope = currentScope.parentScope;
+        --loopDepth;
+        ++iterCount;
     }
 
     @Override
     public void visit(jumpStatementNode it) {
-
+        if (it.isReturn) {
+            if (it.retExpr != null) {
+                it.retExpr.accept(this);
+                if (currentFunc.retReg != null) {
+                    entity rd;
+                    IRType rsIRType = it.retExpr.irType, targetIRType = currentFunc.returnType;
+                    if (!(it.retExpr.rd instanceof constant)) {
+                        if (rsIRType.isString || targetIRType.isString) {
+                            if (rsIRType.cDef == null) rd = constStringToString(it.retExpr);
+                            else rd = it.retExpr.rd;
+                        } else if (!rsIRType.equal(targetIRType)) {
+                            rd = new register();
+                            convertOp.convertType convertType;
+                            if (rsIRType.intLen < targetIRType.intLen) convertType = convertOp.convertType.ZEXT;
+                            else convertType = convertOp.convertType.TRUNC;
+                            currentBlock.push_back(new convertOp((register) rd, it.retExpr.rd, convertType, targetIRType, rsIRType));
+                        } else {
+                            rd = it.retExpr.rd;
+                        }
+                    } else {
+                        rd = it.retExpr.rd;
+                    }
+                    currentBlock.push_back(new store(rd, currentFunc.retReg, currentFunc.returnType));
+                }
+                currentBlock.push_back(new br(null, currentFunc.returnBlock, null));
+            } else { // return block directly
+                currentBlock.push_back(new br(null, currentFunc.returnBlock, null));
+            }
+        } else if (it.isBreak) {
+            currentBlock.push_front(new br(null, loopExitBlock, null));
+        } else {
+            currentBlock.push_back(new br(null, loopContinueBlock, null));
+        }
     }
 
     @Override
@@ -234,7 +493,6 @@ public class IRBuilder implements ASTVisitor {
         else {
             Type t = new Type(globalScope.queryType(it.arraySpec.type, it.arraySpec.pos));
             t.dimension = it.arraySpec.emptyBracketPair;
-
             IRType irType;
             if (t.kind == Type.Types.CLASS_TYPE) {
                 irType = new IRType(idToClsDef.get(t.name), t.dimension + 1, 0);
@@ -256,7 +514,7 @@ public class IRBuilder implements ASTVisitor {
                             node.expr.accept(this);
                             entity rs;
                             IRType exprType = node.expr.irType;
-                            if (irType.isString && exprType.cDef == null) {
+                            if (irType.isString && exprType.cDef == null) { // const string
                                 rs = constStringToString(node.expr);
                             } else if (irType.ptrNum == 0 && exprType.ptrNum == 0 && irType.intLen != exprType.intLen) {
                                 convertOp.convertType op;
@@ -721,7 +979,7 @@ public class IRBuilder implements ASTVisitor {
             for (int i = 1; i < len; ++i) {
                 expressionNode curExpr = it.exprList.get(i);
                 curExpr.accept(this);
-                binary.opType op = it.opList.get(i - 1).equals("+") ? binary.opType.AND : binary.opType.SUB;
+                binary.opType op = it.opList.get(i - 1).equals("+") ? binary.opType.ADD : binary.opType.SUB;
                 register rd = new register();
                 currentBlock.push_back(new binary(op, firstExpr.irType, rd, res, curExpr.rd));
                 res = rd;
@@ -850,7 +1108,7 @@ public class IRBuilder implements ASTVisitor {
             String constructorName = "_" + it.type.name + "_" + it.type.name;
             if (idToFuncDef.containsKey(constructorName)) {
                 currentFunc.directCall.add(idToFuncDef.get(constructorName));
-                call constructor = new call(null, voidType, constructorName,idToFuncDef.get(constructorName));
+                call constructor = new call(null, voidType, constructorName, idToFuncDef.get(constructorName));
                 constructor.parameters.push(new entityTypePair(it.rd, it.irType));
                 currentBlock.push_back(constructor);
             }
@@ -870,13 +1128,133 @@ public class IRBuilder implements ASTVisitor {
             currentBlock.push_back(new binary(op, it.irType, rd, it.rd, constUnit));
             currentBlock.push_back(new store(rd, it.idReg, it.irType));
             // 和前缀的区别：没有对 it.rd 进行 ++/--
-        } else if (it.isDot){
-
-
+        } else if (it.isDot) {
+            it.postfixExpr.accept(this);
+            IRType irType = it.postfixExpr.irType;
+            if (irType.cDef == null || irType.ptrNum > 1) {
+                // use array size function (a.size() )
+                register ptrMiddle = new register(), i32Ptr = new register();
+                it.rd = new register();
+                it.irType = i32;
+                it.idReg = null;
+                currentBlock.push_back(new bitcast(ptrMiddle, (register) it.postfixExpr.rd, i32Star, it.postfixExpr.irType)); // cast to arrayType
+                currentBlock.push_back(new getelementptr(i32Ptr, ptrMiddle, i32Star, constZero, constZero)); //get first member in array (i.e. size function)
+                currentBlock.push_back(new load((register) it.rd, i32Ptr, i32Star));
+                lastCallId = null;
+            } else if (irType.cDef.memberType.containsKey(((idExpressionNode) it.expr).content)) {
+                // visit class member
+                IRTypeWithCounter tmp = irType.cDef.memberType.get(((idExpressionNode) it.expr).content);
+                register ptrReg = new register();
+                currentBlock.push_back(new getelementptr(ptrReg, (register) it.postfixExpr.rd, it.postfixExpr.irType, constZero, new constant(tmp.counter)));
+                it.rd = new register();
+                it.idReg = ptrReg;
+                it.irType = tmp.irType.reducePtr();
+                currentBlock.push_back(new load((register) it.rd, ptrReg, tmp.irType));
+            } else {
+                //visit class method
+                ClassType structTmp = (ClassType) globalScope.queryType(irType.cDef.name, it.postfixExpr.pos);
+                lastCallFunc = structTmp.method.get(((idExpressionNode) it.expr).content);
+                lastCallId = "_" + structTmp.name + "_" + lastCallFunc.name;
+                lastFuncCaller = (register) it.postfixExpr.rd;
+                lastFuncCallerIRType = it.postfixExpr.irType;
+            }
         } else if (it.isParen) {
+            // call function
+            it.postfixExpr.accept(this);
+            register rd = null;
+            IRType ir;
+            String currentCallId = lastCallId;
+            FuncType currentCallFunc = lastCallFunc;
+            register currentFuncCaller = lastFuncCaller;
+            IRType currentFuncCallerIRType = lastFuncCallerIRType;
+            lastCallId = null;
+            lastCallFunc = null;
+            lastFuncCaller = null;
+            lastFuncCallerIRType = null;
 
+            if (currentCallId != null) {
+                funcDef funcTmp = idToFuncDef.get(currentCallId);
+                ir = funcTmp.returnType;
+                if (!ir.isVoid) rd = new register();
+                currentFunc.directCall.add(idToFuncDef.get(currentCallId));
+                call Call = new call(rd, ir, currentCallId, idToFuncDef.get(currentCallId));
+                int counter = 0;
+
+                if (Objects.equals(currentCallId, "println") || Objects.equals(currentCallId, "print")) {
+                    expressionNode expr = it.expr.exprList.get(0);
+                    expr.accept(this);
+                    IRType irType = expr.irType;
+                    register tmpReg = new register();
+                    if (irType.cDef == null) { // const string
+                        currentBlock.push_back(new bitcast(tmpReg, (register) expr.rd, i8Star, irType));
+                    } else { // string type
+                        register rdPtr = new register();
+                        currentBlock.push_back(new getelementptr(rdPtr, (register) expr.rd, irType, constZero, constUnit));
+                        currentBlock.push_back(new load(tmpReg, rdPtr, i8Star.getPtr()));
+                    }
+                    Call.push_back(new entityTypePair(tmpReg, i8Star));
+                } else {
+                    if (currentFuncCaller != null) {    // 把调用者作为第一个参数
+                        counter++;
+                        Call.push_back(new entityTypePair(currentFuncCaller, currentFuncCallerIRType));
+                    }
+                    if (it.expr != null) {
+                        for (expressionNode expr : it.expr.exprList) {
+                            expr.accept(this);
+                            IRType tmpIRType = funcTmp.parameters.get(counter);
+                            entity en;
+                            if (tmpIRType.equal(expr.irType) || expr.irType.isVoid) en = expr.rd;
+                            else {
+                                if (tmpIRType.isString) { // const string
+                                    en = constStringToString(expr);
+                                } else {
+                                    register tmpReg = new register();
+                                    if (tmpIRType.ptrNum > 0 || tmpIRType.cDef != null || expr.irType.ptrNum > 0 || expr.irType.cDef != null)
+                                        currentBlock.push_back(new bitcast(tmpReg, (register) expr.rd, tmpIRType, expr.irType));
+                                    else {
+                                        convertOp.convertType op = (tmpIRType.intLen > expr.irType.intLen) ? convertOp.convertType.ZEXT : convertOp.convertType.TRUNC;
+                                        currentBlock.push_back(new convertOp(tmpReg, expr.rd, op, tmpIRType, expr.irType));
+                                    }
+                                    en = tmpReg;
+                                }
+                            }
+                            Call.push_back(new entityTypePair(en, tmpIRType));
+                            counter++;
+                        }
+                    }
+                }
+                currentBlock.push_back(Call);
+            } else {
+                // array size function
+                ir = it.postfixExpr.irType;
+                rd = (register) it.postfixExpr.rd;
+            }
+            it.rd = rd;
+            it.idReg = null;
+            it.irType = ir;
         } else if (it.isBracket) {
-
+            // get array[k]'s address & value
+            it.postfixExpr.accept(this);
+            it.expr.accept(this);
+            it.rd = new register();
+            register ptrReg = new register(), i8ptr = new register(), middlePtr = new register(), locate = new register(), locateMiddle = new register();
+            IRType ptrIRType = it.postfixExpr.irType;
+            // calculate address
+            currentBlock.push_back(new binary(binary.opType.MUL, i32, locateMiddle, it.expr.rd, new constant(ptrIRType.reducePtr().getSize())));
+            currentBlock.push_back(new binary(binary.opType.ADD, i32, locate, locateMiddle, new constant(4)));
+            if (!ptrIRType.equal(i8Star))
+                currentBlock.push_back(new bitcast(i8ptr, (register) it.postfixExpr.rd, i8Star, ptrIRType));
+            else i8ptr = (register) it.postfixExpr.rd;
+            // get address
+            currentBlock.push_back(new getelementptr(middlePtr, i8ptr, i8Star, locate, constZero));
+            currentBlock.push_back(new bitcast(ptrReg, middlePtr, ptrIRType, i8Star));
+            //  进入下一层数组
+            it.irType = new IRType(ptrIRType);
+            it.irType.ptrNum--;
+            if (it.irType.ptrNum == 1 && it.irType.cDef != null && it.irType.cDef.name.equals("string"))
+                it.irType.isString = true;
+            currentBlock.push_back(new load((register) it.rd, ptrReg, ptrIRType));
+            it.idReg = ptrReg;
         } else {
             it.primaryExpr.accept(this);
             it.rd = it.primaryExpr.rd;
@@ -891,7 +1269,7 @@ public class IRBuilder implements ASTVisitor {
             regTypePair regType = currentScope.getEntity("this", true);
             it.rd = new register();
             it.idReg = regType.reg;
-            currentBlock.push_back(new load((register) it.rd ,it.idReg, regType.irType));
+            currentBlock.push_back(new load((register) it.rd, it.idReg, regType.irType));
             it.irType = regType.irType.reducePtr();
         } else if (it.isExpr || it.isIdExpr) {
             it.expr.accept(this);
@@ -956,9 +1334,9 @@ public class IRBuilder implements ASTVisitor {
         } else return;
 
         if (loopDepth > regType.reg.loopDepth) regType.reg.loopDepth = loopDepth;
+        it.rd = new register();
         it.idReg = regType.reg;
         it.irType = regType.irType.reducePtr();
-        it.rd = new register();
         currentBlock.push_back(new load((register) it.rd, it.idReg, regType.irType));
     }
 
@@ -1031,6 +1409,8 @@ public class IRBuilder implements ASTVisitor {
 
     }
 
+    //----------------------------------------------------------------------------------------------------------
+
     private register constStringToString(expressionNode firstExpr) {
         IRType firstIRType = firstExpr.irType;
         register receiveReg = new register(), afterCast = new register(), rdLen = new register(), rdCptr = new register(), i8Ptr = new register();
@@ -1093,7 +1473,7 @@ public class IRBuilder implements ASTVisitor {
             ++iterCount;
             register newLoopRd = new register(), iRd = new register(), cmpResult = new register(), addResult = new register();
             alloca newLoop = new alloca(newLoopRd, i32);
-            newLoop.Comments = "for new loop";
+            newLoop.comments = "for new loop";
             //initialize
             currentFunc.push_back(newLoop);
             currentBlock.push_back(new store(new constant(4), newLoopRd, i32));
