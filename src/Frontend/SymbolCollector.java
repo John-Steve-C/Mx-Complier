@@ -132,6 +132,7 @@ public class SymbolCollector implements ASTVisitor {
                     struct.name = c.name;   // remember to check the name!
 
                     currentClassDef = new classDef();
+                    currentClassDef.name = c.name;  // remember twice...
                     globalScope.addClassDef(c.name, currentClassDef);
 
                     globalScope.addVarType(struct, c.name, it.pos);

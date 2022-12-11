@@ -49,7 +49,7 @@ public class IRBuilder implements ASTVisitor {
 
     public IRBuilder(Program p, GlobalScope gscope, HashMap<String, classDef> idToClsDef, HashMap<String, funcDef> idToFuncDef) {
         program = p;
-        this.idToClsDef = idToClsDef;
+        this.idToClsDef = idToClsDef;  // why not gscope.idToClassDef?
         this.idToFuncDef = idToFuncDef;
         currentScope = globalScope = gscope;
 
@@ -476,8 +476,8 @@ public class IRBuilder implements ASTVisitor {
                 currentBlock.push_back(new br(null, currentFunc.returnBlock, null));
             }
         } else if (it.isBreak) {
-            currentBlock.push_front(new br(null, loopExitBlock, null));
-        } else {
+            currentBlock.push_back(new br(null, loopExitBlock, null));
+        } else {    // is Continue
             currentBlock.push_back(new br(null, loopContinueBlock, null));
         }
     }
@@ -657,15 +657,18 @@ public class IRBuilder implements ASTVisitor {
                         currentBlock.push_back(new br(null, curExprBlk, null));
                     }
                 } else {
-                    register rd = new register();
                     if (curExpr.irType.intLen == 8) {
+                        register rd = new register();
                         currentBlock.push_back(new convertOp(rd, curExpr.rd, convertOp.convertType.TRUNC, i1, curExpr.irType));
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
                     } else if (curExpr.irType.intLen != 1) {
                         // 大于 0 就认为是真
+                        register rd = new register();
                         currentBlock.push_back(new icmp(rd, curExpr.rd, constZero, icmp.cmpOpType.SGT, curExpr.irType));
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
                     }
-                    curExpr.rd = rd;
-                    curExpr.irType = i1;
                     // 短路求值2，如果已经计算出 true，直接返回即可
                     // 否则继续计算表达式
                     currentBlock.push_back(new br((register) curExpr.rd, exitBlk, curExprBlk));
@@ -685,14 +688,18 @@ public class IRBuilder implements ASTVisitor {
                         Phi.push_back(new entityBlockPair(constZero, currentBlock));
                     }
                 } else {
-                    register rd = new register();
                     if (curExpr.irType.intLen == 8) {
+                        register rd = new register();
                         currentBlock.push_back(new convertOp(rd, curExpr.rd, convertOp.convertType.TRUNC, i1, curExpr.irType));
-                    } else {
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
+                    } else if (curExpr.irType.intLen != 1) {
+                        register rd = new register();
                         currentBlock.push_back(new icmp(rd, curExpr.rd, constZero, icmp.cmpOpType.SGT, curExpr.irType));
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
                     }
-                    curExpr.rd = rd;
-                    curExpr.irType = i1;
+
                     Phi.push_back(new entityBlockPair(curExpr.rd, currentBlock));
                 }
             }
@@ -739,14 +746,17 @@ public class IRBuilder implements ASTVisitor {
                         currentBlock.push_back(new br(null, curExprBlk, null));
                     }
                 } else {
-                    register rd = new register();
                     if (curExpr.irType.intLen == 8) {
+                        register rd = new register();
                         currentBlock.push_back(new convertOp(rd, curExpr.rd, convertOp.convertType.TRUNC, i1, curExpr.irType));
-                    } else {
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
+                    } else if (curExpr.irType.intLen != 1){
+                        register rd = new register();
                         currentBlock.push_back(new icmp(rd, curExpr.rd, constZero, icmp.cmpOpType.SGT, curExpr.irType));
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
                     }
-                    curExpr.rd = rd;
-                    curExpr.irType = i1;
                     // 短路求值2, 结果为 FALSE 则直接退出
                     currentBlock.push_back(new br((register) curExpr.rd, curExprBlk, exitBlk));
                 }
@@ -765,14 +775,17 @@ public class IRBuilder implements ASTVisitor {
                         Phi.push_back(new entityBlockPair(constZero, currentBlock));
                     }
                 } else {
-                    register rd = new register();
                     if (curExpr.irType.intLen == 8) {
+                        register rd = new register();
                         currentBlock.push_back(new convertOp(rd, curExpr.rd, convertOp.convertType.TRUNC, i1, curExpr.irType));
-                    } else {
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
+                    } else if (curExpr.irType.intLen != 1) {
+                        register rd = new register();
                         currentBlock.push_back(new icmp(rd, curExpr.rd, constZero, icmp.cmpOpType.SGT, curExpr.irType));
+                        curExpr.rd = rd;
+                        curExpr.irType = i1;
                     }
-                    curExpr.rd = rd;
-                    curExpr.irType = i1;
                     Phi.push_back(new entityBlockPair(curExpr.rd, currentBlock));
                 }
             }
@@ -968,7 +981,7 @@ public class IRBuilder implements ASTVisitor {
                 register curRs = curExpr.irType.cDef == null ? constStringToString(curExpr) : (register) curExpr.rd;
                 // 调用 stringAppend 函数
                 currentFunc.directCall.add(builtInFunc);
-                call Call = new call(rd, i32, "_string_stringAppend", builtInFunc);
+                call Call = new call(rd, stringStar, "_string_stringAppend", builtInFunc);
                 Call.push_back(new entityTypePair(res, stringStar));
                 Call.push_back(new entityTypePair(curRs, stringStar));
                 currentBlock.push_back(Call);

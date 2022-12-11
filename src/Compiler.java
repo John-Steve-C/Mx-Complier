@@ -23,9 +23,9 @@ public class Compiler
     public static void main(String[] args) throws IOException
     {
         InputStream input_stream = System.in;
-        CharStream input = CharStreams.fromStream(input_stream);
+//        CharStream input = CharStreams.fromStream(input_stream);
 //        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/lambda-package/lambda-5.mx");
-//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/mytest/test.mx");
+        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/src/test.mx");
 
         try
         {

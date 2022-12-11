@@ -61,6 +61,7 @@ public class IRPrinter implements Pass {
         blockVisited = new HashSet<>();
         regIndex = new HashMap<>();
         blockQueue = new LinkedList<>();
+
         collectBlocks(f.rootBlock);
         //run naming
         int len = f.parameterRegs.size();
@@ -68,9 +69,15 @@ public class IRPrinter implements Pass {
             getRegName(f.parameterRegs.get(i));
         }
         getBlockName(f.rootBlock);
-        for (alloca alloca : f.allocas) {
-            runNaming(alloca);
+//        for (alloca alloca : f.allocas) {
+//            runNaming(alloca);
+//        }
+        // todo: specially to add allocas into rootblock
+        // no need to runNaming ahead of block
+        for (int i = f.allocas.size() - 1; i >= 0; --i) {
+            f.rootBlock.push_front(f.allocas.get(i));
         }
+
         blockQueue.forEach(this::runNaming);
         //print
         output.print("define " + getType(f.returnType) + " @" + f.funcName + "(");
@@ -79,9 +86,10 @@ public class IRPrinter implements Pass {
             if (i < len - 1) output.print(",");
         }
         output.println("){");
-        for (alloca alloca : f.allocas) {
-            print(alloca);
-        }
+
+//        for (alloca alloca : f.allocas) {
+//            print(alloca);
+//        }
         blockQueue.forEach(this::visitBlock);
         output.println("}\n");
     }
