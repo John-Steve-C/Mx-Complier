@@ -3,7 +3,7 @@ package IR.Node.GlobalUnit;
 import IR.TypeSystem.register;
 import IR.TypeSystem.IRType;
 
-public class globalStringConst {
+public class globalStringConst extends globalUnit{
     public String content, rawStr;
     public int counter = 0;
     public register rd;

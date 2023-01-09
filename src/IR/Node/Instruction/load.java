@@ -3,7 +3,7 @@ package IR.Node.Instruction;
 import IR.TypeSystem.*;
 
 public class load extends instruction {
-    public register rd, ptr;
+    public register rd, ptr;    // ptr(rs)
     public IRType rsType;
     public int align;
     public entity recorder = null;

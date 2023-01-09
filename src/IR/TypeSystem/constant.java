@@ -47,7 +47,7 @@ public class constant extends entity{
     @Override
     public entity clone() {
         if (kind == constType.INT) return new constant(intValue);
-        if (kind == constType.BOOL) return new constant(intValue>0);
+        if (kind == constType.BOOL) return new constant(intValue > 0);
         if (kind == constType.STRING) return new constant(stringValue);
         return new constant();
     }

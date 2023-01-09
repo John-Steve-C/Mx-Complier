@@ -7,7 +7,7 @@ import IR.TypeSystem.IRType;
 // int c = 50;
 // @c = global i32 50, align 4
 
-public class globalVarDeclaration {
+public class globalVarDeclaration extends globalUnit{
     public IRType rsType;
     public String name;
     public int align;

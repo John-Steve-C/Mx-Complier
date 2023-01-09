@@ -1,5 +1,8 @@
 import AST.*;
 import AST.Node.RootNode;
+import Assembly.AsmBuilder;
+import Assembly.AsmPrinter;
+import Assembly.AsmProgram;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
 import Utility.Error.Error;
@@ -15,6 +18,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 
 
@@ -25,7 +29,11 @@ public class Compiler
         InputStream input_stream = System.in;
 //        CharStream input = CharStreams.fromStream(input_stream);
 //        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/lambda-package/lambda-5.mx");
-        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/src/test.mx");
+        CharStream input = CharStreams.fromFileName("mytest/test.mx");
+
+        // print as file
+        PrintStream output_llvm = new PrintStream("mytest/test.ll");
+        PrintStream output_asm = new PrintStream("mytest/test.s");
 
         try
         {
@@ -57,9 +65,14 @@ public class Compiler
             // Sort of IRBuilder, maybe opt
             Program pg = new Program();
             new IRBuilder(pg, gScope, idToDef, idToFuncDef).visit(ASTRoot);
-            new IRPrinter(System.out).visitProgram(pg);
+//            new IRPrinter(System.out).visitProgram(pg);
+            new IRPrinter(output_llvm).visitProgram(pg);    // print in file
 
             // Sort of ASMBuilder, maybe opt
+            // we print the buildInFunction by builtin.s
+            AsmProgram asmPg = new AsmProgram();
+            new AsmBuilder(asmPg).visitProgram(pg);
+            new AsmPrinter(output_asm, asmPg).print();
 //            BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
         }
         catch (Error err)

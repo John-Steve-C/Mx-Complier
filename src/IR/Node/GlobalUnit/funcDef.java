@@ -7,7 +7,7 @@ import IR.Node.Instruction.alloca;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-public class funcDef {
+public class funcDef extends globalUnit {
     public String funcName = null;
     public IRType returnType = null;
     public ArrayList<IRType> parameters = new ArrayList<>();

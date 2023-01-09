@@ -98,7 +98,7 @@ LLVM（low level virtual machine）是一个开源编译器框架，能够提供
 - ~~可执行文件的符号表(与变量的可见性有关，在Mx中不需要实现)~~
 - Disk上的全局变量 `@varName`
 - 虚拟寄存器 `%1`，`%2`... 寄存器的速度远大于栈内存
-  - 需要模拟寄存器的分配
+  - 需要模拟寄存器的分配（在asm阶段实现）
 - 栈上变量 `%local_variable = alloca i32` (我们定义的Mx没有指针)
 - 全局变量和栈上变量，都是指针
 - SSA(Static Single Assignment), 每个变量只能被赋值一次
@@ -111,11 +111,20 @@ Todo:
 
 - [x] 实现 `IRType`，保存必要信息
 - [x] 确定 IR 大致架构，分为哪些部分
-- [ ] 完成具体的Nodes，比如 `classDef`
-- [ ] 在 `statement` 中，实现对某些 LLVM IR 指令的存储和翻译，比如 `alloca`, `br`...
-- [ ] 实现 `IRBuilder` 以及 `IRPrinter`
+- [x] 完成具体的Nodes，比如 `classDef`
+- [x] 在 `statement` 中，实现对某些 LLVM IR 指令的存储和翻译，比如 `alloca`, `br`...
+- [x] 实现 `IRBuilder` 以及 `IRPrinter`
 
 Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
+
+把自己定义的 IR 转化为 assembly 输出
+
+![](https://img-blog.csdnimg.cn/76b4f20b8bb447d297759f98d3434a07.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQ2VybWFu,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+- [x] 定义 Asm 中的相关指令，得到大致的 Asm code 框架
+- [ ] 进行 [liveness analysis](https://en.wikipedia.org/wiki/Live-variable_analysis)（live variable analysis），即变量的活跃性分析
+- [ ] 进行寄存器分配（把用数字编号的虚拟寄存器，转化为RV32I指令集的通用寄存器）
+- [ ] 实现 AsmPrinter，得到 `.s` 文件
 
 > 检查正确性：
 > 
@@ -124,6 +133,12 @@ Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 > `llc test.ll` ：从 test.ll 生成 test.s
 > 
 > `clang -S test.c` ：直接从test.c 生成 test.s
+> 
+> 配置好 [ravel](https://github.com/Yveh/ravel/tree/bd8e38e0cfd57dd6b1d108b224c1c4966485de96)，一个用 c++ 实现的 simulator
+> 
+> `export PATH="/usr/local/opt/bin:$PATH"` 配置好[环境变量](https://blog.csdn.net/xkx_07_10/article/details/128143925)（也就是ravel安装的位置），这是针对每次打开的窗口都要做。也可以直接到 .bashrc 里面修改
+> 
+> `ravel --oj-mode` ，以 `test.s` 和 `builtin.s` 作为 source，输入 `test.in`，输出到 test.out 中
 
 有一些必须实现/注意的点：
 - 高维数组

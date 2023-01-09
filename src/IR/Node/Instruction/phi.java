@@ -1,7 +1,7 @@
 package IR.Node.Instruction;
 
 import IR.TypeSystem.*;
-
+import Assembly.AsmBlock;
 import java.util.LinkedList;
 
 public class phi extends instruction {
@@ -12,7 +12,7 @@ public class phi extends instruction {
     public register rd;
     public LinkedList<entityBlockPair> entityBlockPairs = new LinkedList<>();
     public alloca creator = null;
-//    public AsmBlock asmParentBlock = null;
+    public AsmBlock asmParentBlock = null;
 
     public phi(register rd, IRType irType) {
         this.rd = rd;

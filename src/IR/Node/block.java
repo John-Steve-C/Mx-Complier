@@ -18,7 +18,7 @@ public class block {
     public boolean jump = false;
     public int loopDepth = 0, blockIndex = 0;
 
-    public terminator tail = null;
+    public terminator tail = null;  // 中止类指令即为最后一条
 
     public block(int loopDepth) {
         this.loopDepth = loopDepth;
