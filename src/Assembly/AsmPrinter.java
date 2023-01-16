@@ -18,7 +18,7 @@ public class AsmPrinter {
     }
 
     public void printBlock(AsmBlock block) {
-        output.println(block + ": ");
+        output.println(block + ":");
         for (AsmInst i = block.headInst; i != null; i = i.next)
             output.println("\t" + i);
     }

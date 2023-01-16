@@ -4,7 +4,6 @@ import AST.*;
 import AST.Node.*;
 import AST.Node.Expression.*;
 import AST.Node.Statement.*;
-import Backend.Pass;
 import IR.Node.*;
 import IR.Node.GlobalUnit.*;
 import IR.Node.Program;

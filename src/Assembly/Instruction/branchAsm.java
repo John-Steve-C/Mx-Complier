@@ -22,7 +22,7 @@ public class branchAsm extends AsmInst {
             return "b" + op + "z " + src1 + ", " + dest;    // auto call toString()
         } else {
             // beq : (src1 == src2)
-            return "b" + op + src1 + ", " + src2 + ", " + dest;
+            return "b" + op + " " + src1 + ", " + src2 + ", " + dest;
         }
     }
 }

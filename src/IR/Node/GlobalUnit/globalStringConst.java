@@ -4,8 +4,8 @@ import IR.TypeSystem.register;
 import IR.TypeSystem.IRType;
 
 public class globalStringConst extends globalUnit{
-    public String content, rawStr;
-    public int counter = 0;
+    public String content, rawStr;  // content 是 llvm 格式
+    public int counter = 0; // 表示是全局中的第几个，输出在 label 中
     public register rd;
     public IRType type;
 

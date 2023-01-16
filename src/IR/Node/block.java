@@ -56,4 +56,9 @@ public class block {
             headStmt = stmt;
         }
     }
+
+    @Override
+    public String toString() {
+        return "" + blockIndex;
+    }
 }

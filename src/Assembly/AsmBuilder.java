@@ -37,6 +37,7 @@ public class AsmBuilder {
         if (blockMap.containsKey(b)) return blockMap.get(b);
         else {
             AsmBlock newBlock = new AsmBlock(b.loopDepth, b.comment);
+            newBlock.id = blockMap.size();
             blockMap.put(b, newBlock);
             return newBlock;
         }
@@ -167,7 +168,7 @@ public class AsmBuilder {
                     case SUB -> op = AsmInst.CalKind.sub;
                     case MUL -> op = AsmInst.CalKind.mul;
                     case SDIV -> op = AsmInst.CalKind.div;
-                    case MOD -> op = AsmInst.CalKind.rem;
+                    case MOD -> op = AsmInst.CalKind.rem;   //
                     case AND -> op = AsmInst.CalKind.and;
                     case OR -> op = AsmInst.CalKind.or;
                     case XOR -> op = AsmInst.CalKind.xor;
@@ -219,6 +220,9 @@ public class AsmBuilder {
                             loadValue(curBlock, rd, value2);
                             curBlock.push_back(new RTypeAsm(op, rd, rs1, rd));
                         }
+                    } else {
+                        // normal form
+                        curBlock.push_back(new RTypeAsm(op, rd, rs1, getReg((register) binaryInst.rs2)));
                     }
                 }
 
@@ -244,7 +248,7 @@ public class AsmBuilder {
                         switch (in.op) {
                             case slt -> op = AsmInst.CmpKind.ge;    // < --- >=
                             case sgt -> op = AsmInst.CmpKind.le;
-                            case seq -> op = AsmInst.CmpKind.ne;
+                            case seq -> op = AsmInst.CmpKind.ne;    // todo: maybe not opposite?
                             case sne -> op = AsmInst.CmpKind.eq;
                         }
                         falseInst = new branchAsm(op, in.rs1, in.rs2, falseBlock);
@@ -384,18 +388,17 @@ public class AsmBuilder {
 
             } else if (i instanceof load loadInst) {
                 String label = loadInst.ptr.label;
-                reg rd = getReg(loadInst.rd);
                 int align = loadInst.align;
                 if (label != null) {
                     reg tmpReg = new virtualReg(regCnt++);
                     curBlock.push_back(new laAsm(tmpReg, label));
-                    curBlock.push_back(new loadAsm(rd, tmpReg, new Imm(0), align));
+                    curBlock.push_back(new loadAsm(getReg(loadInst.rd), tmpReg, new Imm(0), align));
                 } else {
                     virtualReg vr = (virtualReg) getReg(loadInst.ptr);
-                    if (vr.overflow >= 0) curBlock.push_back(new loadAsm(rd, s0, new Imm(vr.overflow), align));
-                    else if (vr.isAlloca) curBlock.push_back(new moveAsm(rd, vr));
-                    else if (vr.index < 0) curBlock.push_back(new loadAsm(rd, s0, new Imm(vr.index * 4), align));
-                    else curBlock.push_back(new loadAsm(rd, vr, new Imm(0), align));
+                    if (vr.overflow >= 0) curBlock.push_back(new loadAsm(getReg(loadInst.rd), s0, new Imm(vr.overflow), align));
+                    else if (vr.isAlloca) curBlock.push_back(new moveAsm(getReg(loadInst.rd), vr));
+                    else if (vr.index < 0) curBlock.push_back(new loadAsm(getReg(loadInst.rd), s0, new Imm(vr.index * 4), align));
+                    else curBlock.push_back(new loadAsm(getReg(loadInst.rd), vr, new Imm(0), align));
                 }
 
             } else if (i instanceof store storeInst) {
@@ -436,6 +439,7 @@ public class AsmBuilder {
                     if (retInst.value instanceof register) curBlock.push_back(new moveAsm(asmProg.physicalRegs.get(10), getReg((register) retInst.value)));
                     else curBlock.push_back(new liAsm(asmProg.physicalRegs.get(10), getImm((constant) retInst.value)));
                 }
+                curBlock.push_back(new retAsm());
 
             } else if (i instanceof bitcast bitInst) {
                 if (bitInst.rs.label != null) curBlock.push_back(new laAsm(getReg(bitInst.rd), bitInst.rs.label));
@@ -456,7 +460,11 @@ public class AsmBuilder {
     }
 
     public void visitGlobalString(globalStringConst str) {
-        asmProg.globals.add(new AsmGlobal(".str." + str.content, str.type.arrayLen, str.rawStr, true));
+        // label must be unique, use counter to specify
+        String label;
+        if (str.counter == 0) label = ".str";   // ".str.0" is illegal in Asm
+        else label = ".str." + str.counter;
+        asmProg.globals.add(new AsmGlobal(label, str.type.arrayLen, str.rawStr, true));
     }
 
     public void collectFunc(AsmFunc func) {

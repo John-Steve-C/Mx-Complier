@@ -1,8 +1,7 @@
 import AST.*;
 import AST.Node.RootNode;
-import Assembly.AsmBuilder;
-import Assembly.AsmPrinter;
-import Assembly.AsmProgram;
+import Assembly.*;
+import Backend.regAllocation;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
 import Utility.Error.Error;
@@ -72,8 +71,11 @@ public class Compiler
             // we print the buildInFunction by builtin.s
             AsmProgram asmPg = new AsmProgram();
             new AsmBuilder(asmPg).visitProgram(pg);
+//            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
+            new regAllocation(asmPg).work();
             new AsmPrinter(output_asm, asmPg).print();
-//            BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
+
+            // BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
         }
         catch (Error err)
         {

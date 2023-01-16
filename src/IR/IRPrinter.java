@@ -1,6 +1,5 @@
 package IR;
 
-import Backend.Pass;
 import IR.Node.*;
 import IR.Node.Instruction.*;
 import IR.Node.GlobalUnit.*;
@@ -11,7 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-public class IRPrinter implements Pass {
+public class IRPrinter {
 
     private PrintStream output;
     private int cnt = 0;    //统计输出时使用 虚拟寄存器 的总数
@@ -26,7 +25,6 @@ public class IRPrinter implements Pass {
     }
 
 
-    @Override
     public void visitProgram(Program prog) {
         prog.cls.forEach(this::visitClassDef);
         if (prog.cls.size() != 0) output.println();
@@ -44,7 +42,6 @@ public class IRPrinter implements Pass {
         if (prog.decl.size() != 0) output.println();
     }
 
-    @Override
     public void visitBlock(block blk) {
         output.println("\n"+ ((blk.comment != null) ? ";" + blk.comment + "\n" : "") + getBlockName(blk) + ":" );
 //        output.println(";" + getBlockName(blk) + " " +getBlockName(blk.IDom));
@@ -54,7 +51,6 @@ public class IRPrinter implements Pass {
         }
     }
 
-    @Override
     public void visitFuncDef(funcDef f) {
         cnt = 0;
         blockIndex = new HashMap<>();
@@ -94,7 +90,6 @@ public class IRPrinter implements Pass {
         output.println("}\n");
     }
 
-    @Override
     public void visitClassDef(classDef cls) {
         // classDef != classType
         output.print("%struct." + cls.name + " = type { ");
@@ -108,19 +103,16 @@ public class IRPrinter implements Pass {
         output.println();
     }
 
-    @Override
     public void visitGlobalVar(globalVarDeclaration g) {
         regGlobal.put(g.rd, g.name);
         output.println(getRegName(g.rd) + " = global " + getType(g.rsType) + " " + getEntityString(g.rs) + ", align " + g.align);
     }
 
-    @Override
     public void visitGlobalString(globalStringConst str) {
         regGlobal.put(str.rd, ".str" + ((str.counter == 0) ? "" : "." + str.counter));
         output.println(getRegName(str.rd) + " = constant " + getType(str.type) + " c" + str.content + ", align 1");
     }
 
-    @Override
     public void visitDeclare(declare dec) {
         output.print("declare " + getType(dec.returnType) + " @" + dec.funcName + "(");
         int len = dec.parameter.size();
@@ -257,7 +249,7 @@ public class IRPrinter implements Pass {
     }
 
     private String getCalOp(binary.opType op) {
-        String s = switch (op) {
+        return switch (op) {
             case ADD -> "add";
             case SUB -> "sub";
             case OR -> "or";
@@ -270,11 +262,10 @@ public class IRPrinter implements Pass {
             case AND -> "and";
             case LSHR -> "lshr";
         };
-        return s;
     }
 
     private String getCmpOp(icmp.cmpOpType op) {
-        String s = switch (op) {
+        return switch (op) {
             case SLE -> "sle";
             case SLT -> "slt";
             case SGE -> "sge";
@@ -282,16 +273,14 @@ public class IRPrinter implements Pass {
             case EQ -> "eq";
             case NEQ -> "ne";
         };
-        return s;
     }
 
     private String getConvertOp(convertOp.convertType op) {
-        String s = switch (op) {
+        return switch (op) {
             case TRUNC -> "trunc";
             case SEXT -> "sext";
             case ZEXT -> "zext";
         };
-        return s;
     }
 
     public void print(instruction inst) {
