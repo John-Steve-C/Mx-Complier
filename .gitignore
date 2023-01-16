@@ -8,3 +8,5 @@ mytest/
 debug/
 src/test.*
 src/ans.ll
+output.ll
+output.s
