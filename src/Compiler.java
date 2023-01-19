@@ -71,15 +71,13 @@ public class Compiler
             new IRPrinter(output_llvm).visitProgram(pg);    // print in file
 
             // Sort of ASMBuilder, maybe opt
-            // we print the buildInFunction by builtin.s
+            new BuiltinFunctionASMPrinter("builtin.s"); // we print the buildInFunction by builtin.s
             AsmProgram asmPg = new AsmProgram();
             new AsmBuilder(asmPg).visitProgram(pg);
 //            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
             new livenessAnalysis(asmPg).work();
             new regAllocation(asmPg).work();
             new AsmPrinter(output_asm, asmPg).print();
-
-            new BuiltinFunctionASMPrinter("builtin.s");
         }
         catch (Error err)
         {
