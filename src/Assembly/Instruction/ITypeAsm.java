@@ -2,6 +2,8 @@ package Assembly.Instruction;
 
 import Assembly.Operand.*;
 
+import java.util.BitSet;
+
 public class ITypeAsm extends AsmInst {
     public reg rs1, rd;
     public Imm imm;
@@ -12,6 +14,27 @@ public class ITypeAsm extends AsmInst {
         this.rd = rd;
         this.rs1 = rs1;
         this.imm = imm;
+    }
+
+    @Override
+    public void fillSet() {
+        use.set(rs1.getNumber());
+        def.set(rd.getNumber());
+    }
+
+    @Override
+    public void calInst() {
+        liveOut = new BitSet(bitSize);
+        if (next != null) liveOut.or(next.liveIn);
+        liveIn = (BitSet) use.clone();
+        BitSet tmp = (BitSet) liveOut.clone();
+        tmp.andNot(def);
+        liveIn.or(tmp);
+    }
+
+    @Override
+    public boolean check() {
+        return !liveOut.get(rd.getNumber()) && rd.getNumber() >= 32;
     }
 
     @Override

@@ -65,14 +65,14 @@ public class IRPrinter {
             getRegName(f.parameterRegs.get(i));
         }
         getBlockName(f.rootBlock);
-//        for (alloca alloca : f.allocas) {
-//            runNaming(alloca);
-//        }
+        for (alloca alloca : f.allocas) {
+            runNaming(alloca);
+        }
         // todo: specially to add allocas into rootblock
         // no need to runNaming ahead of block
-        for (int i = f.allocas.size() - 1; i >= 0; --i) {
-            f.rootBlock.push_front(f.allocas.get(i));
-        }
+//        for (int i = f.allocas.size() - 1; i >= 0; --i) {
+//            f.rootBlock.push_front(f.allocas.get(i));
+//        }
 
         blockQueue.forEach(this::runNaming);
         //print
@@ -83,9 +83,9 @@ public class IRPrinter {
         }
         output.println("){");
 
-//        for (alloca alloca : f.allocas) {
-//            print(alloca);
-//        }
+        for (alloca alloca : f.allocas) {
+            print(alloca);
+        }
         blockQueue.forEach(this::visitBlock);
         output.println("}\n");
     }

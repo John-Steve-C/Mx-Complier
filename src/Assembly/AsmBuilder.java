@@ -362,25 +362,30 @@ public class AsmBuilder {
                 } else {
                     rs2 = getReg((register) icmpInst.rs2);
                 }
-                reg tmpReg = new virtualReg(regCnt++);
+                // reg tmpReg = new virtualReg(regCnt++);
+                // shouldn't add a useless reg for SGT & SLT
                 switch (icmpInst.cmpOp) {
                     // we only have slt in RV32I
                     case SGT -> curBlock.push_back(new RTypeAsm(AsmInst.CalKind.slt, rd, rs2, rs1));
                     case SLT -> curBlock.push_back(new RTypeAsm(AsmInst.CalKind.slt, rd, rs1, rs2));
                     case SGE -> {
                         // implement SGE by 2 combined insts
+                        reg tmpReg = new virtualReg(regCnt++);
                         curBlock.push_back(new RTypeAsm(AsmInst.CalKind.slt, tmpReg, rs1, rs2));
                         curBlock.push_back(new ITypeAsm(AsmInst.CalKind.seq, rd, tmpReg, new Imm(0)));
                     }
                     case SLE -> {
+                        reg tmpReg = new virtualReg(regCnt++);
                         curBlock.push_back(new RTypeAsm(AsmInst.CalKind.slt, tmpReg, rs2, rs1));
                         curBlock.push_back(new ITypeAsm(AsmInst.CalKind.seq, rd, tmpReg, new Imm(0)));
                     }
                     case EQ -> {
+                        reg tmpReg = new virtualReg(regCnt++);
                         curBlock.push_back(new RTypeAsm(AsmInst.CalKind.xor, tmpReg, rs1, rs2));
                         curBlock.push_back(new ITypeAsm(AsmInst.CalKind.seq, rd, tmpReg, new Imm(0)));
                     }
                     case NEQ -> {
+                        reg tmpReg = new virtualReg(regCnt++);
                         curBlock.push_back(new RTypeAsm(AsmInst.CalKind.xor, tmpReg, rs1, rs2));
                         curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sne, rd, tmpReg, new Imm(0)));
                     }

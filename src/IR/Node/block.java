@@ -13,6 +13,7 @@ public class block {
     public instruction headStmt = null, tailStmt = null;
     // 保存前继和后继的 block
     public HashSet<block> successors = new HashSet<>(), predecessor = new HashSet<>(), children = null;
+//    public ArrayList<block> successors = new ArrayList<>();
     public LinkedList<phi> Phis = new LinkedList<>();
 
     public boolean jump = false;

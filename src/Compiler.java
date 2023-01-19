@@ -1,7 +1,7 @@
 import AST.*;
 import AST.Node.RootNode;
 import Assembly.*;
-import Backend.regAllocation;
+import Backend.*;
 import Frontend.SemanticChecker;
 import Frontend.SymbolCollector;
 import Utility.Error.Error;
@@ -75,10 +75,11 @@ public class Compiler
             AsmProgram asmPg = new AsmProgram();
             new AsmBuilder(asmPg).visitProgram(pg);
 //            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
+            new livenessAnalysis(asmPg).work();
             new regAllocation(asmPg).work();
             new AsmPrinter(output_asm, asmPg).print();
 
-             BuiltinFunctionASMPrinter builtin_printer = new BuiltinFunctionASMPrinter("builtin.s");
+            new BuiltinFunctionASMPrinter("builtin.s");
         }
         catch (Error err)
         {
