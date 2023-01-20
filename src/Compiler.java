@@ -32,10 +32,10 @@ public class Compiler
 
         // print as file
 //        PrintStream output_llvm = new PrintStream("mytest/test.ll");
-        PrintStream output_asm = new PrintStream("mytest/test.s");
+//        PrintStream output_asm = new PrintStream("mytest/test.s");
         // for OJ-test
 //        PrintStream output_llvm = new PrintStream("output.ll");
-//        PrintStream output_asm = new PrintStream("output.s");
+        PrintStream output_asm = new PrintStream("output.s");
 
         try
         {
