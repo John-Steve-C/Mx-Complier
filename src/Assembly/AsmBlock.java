@@ -2,14 +2,12 @@ package Assembly;
 
 import Assembly.Instruction.AsmInst;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 public class AsmBlock {
     public AsmInst headInst, tailInst;  // 链表
-    public HashSet<AsmBlock> successors = new HashSet<>();  // 后继
-//    public ArrayList<AsmBlock> successors = new ArrayList<>();  // 后继
+//    public HashSet<AsmBlock> successors = new HashSet<>();  // 后继
+    public LinkedHashSet<AsmBlock> successors = new LinkedHashSet<>();
 
     public int index = -1, funcIndex = -1;
     public boolean isRoot = false;
