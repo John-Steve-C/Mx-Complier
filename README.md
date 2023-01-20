@@ -122,9 +122,10 @@ Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 ![](https://img-blog.csdnimg.cn/76b4f20b8bb447d297759f98d3434a07.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAQ2VybWFu,size_20,color_FFFFFF,t_70,g_se,x_16)
 
 - [x] 定义 Asm 中的相关指令，得到大致的 Asm code 框架
-- [ ] 进行 [liveness analysis](https://en.wikipedia.org/wiki/Live-variable_analysis)（live variable analysis），即变量的活跃性分析
-- [ ] 进行寄存器分配（把用数字编号的虚拟寄存器，转化为RV32I指令集的通用寄存器）
-- [ ] 实现 AsmPrinter，得到 `.s` 文件
+- [x] 输出大致的 Asm，实现 AsmBuilder
+- [x] 进行 [liveness analysis](https://en.wikipedia.org/wiki/Live-variable_analysis)（live variable analysis），即变量的活跃性分析
+- [x] 进行寄存器分配（把用数字编号的虚拟寄存器，转化为RV32I指令集的通用寄存器）
+- [x] 实现 AsmPrinter，得到 `.s` 文件
 
 > 检查正确性：
 > 

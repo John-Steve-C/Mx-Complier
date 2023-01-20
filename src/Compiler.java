@@ -34,8 +34,8 @@ public class Compiler
 //        PrintStream output_llvm = new PrintStream("mytest/test.ll");
 //        PrintStream output_asm = new PrintStream("mytest/test.s");
         // for OJ-test
-//        PrintStream output_llvm = new PrintStream("output.ll");
-//        PrintStream output_asm = new PrintStream("output.s");
+        PrintStream output_llvm = new PrintStream("output.ll");
+        PrintStream output_asm = new PrintStream("output.s");
 
         try
         {
@@ -65,19 +65,19 @@ public class Compiler
             semanticChecker.visit(ASTRoot);
 
             // Sort of IRBuilder, maybe opt
-//            Program pg = new Program();
-//            new IRBuilder(pg, gScope, idToDef, idToFuncDef).visit(ASTRoot);
-////            new IRPrinter(System.out).visitProgram(pg);
-//            new IRPrinter(output_llvm).visitProgram(pg);    // print in file
-//
-//            // Sort of ASMBuilder, maybe opt
-//            new BuiltinFunctionASMPrinter("builtin.s"); // we print the buildInFunction by builtin.s
-//            AsmProgram asmPg = new AsmProgram();
-//            new AsmBuilder(asmPg).visitProgram(pg);
-////            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
-//            new livenessAnalysis(asmPg).work();
-//            new regAllocation(asmPg).work();
-//            new AsmPrinter(output_asm, asmPg).print();
+            Program pg = new Program();
+            new IRBuilder(pg, gScope, idToDef, idToFuncDef).visit(ASTRoot);
+//            new IRPrinter(System.out).visitProgram(pg);
+            new IRPrinter(output_llvm).visitProgram(pg);    // print in file
+
+            // Sort of ASMBuilder, maybe opt
+            new BuiltinFunctionASMPrinter("builtin.s"); // we print the buildInFunction by builtin.s
+            AsmProgram asmPg = new AsmProgram();
+            new AsmBuilder(asmPg).visitProgram(pg);
+//            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
+            new livenessAnalysis(asmPg).work();
+            new regAllocation(asmPg).work();
+            new AsmPrinter(output_asm, asmPg).print();
         }
         catch (Error err)
         {
