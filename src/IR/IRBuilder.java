@@ -41,10 +41,10 @@ public class IRBuilder implements ASTVisitor {
     private boolean funcSuite = false; // like semantic checker
 
     // some define constant & type;
-    private IRType voidType = new IRType(), i1 = new IRType(1), i8 = new IRType(8), i32 = new IRType(32),
+    private final IRType voidType = new IRType(), i1 = new IRType(1), i8 = new IRType(8), i32 = new IRType(32),
             i8Star = i8.getPtr(), stringStar = new IRType(0, 1, 0, null), i32Star = i32.getPtr();
     // todo: stringStar should be i8*?
-    private constant constZero = new constant(0), constVoid = new constant(), constUnit = new constant(1), constFull = new constant(-1);
+    private final constant constZero = new constant(0), constVoid = new constant(), constUnit = new constant(1), constFull = new constant(-1);
 
     public IRBuilder(Program p, GlobalScope gscope, HashMap<String, classDef> idToClsDef, HashMap<String, funcDef> idToFuncDef) {
         program = p;

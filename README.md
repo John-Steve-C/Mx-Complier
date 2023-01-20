@@ -105,7 +105,6 @@ LLVM（low level virtual machine）是一个开源编译器框架，能够提供
   - 把可变变量放到全局变量或者栈内变量里，虚拟寄存器只存储不可变的变量
 - `align 4` 的意义就应该是：向4对齐，即便数据没有占用4个字节，也要为其分配4字节的内存
 - 聚合类型（结构体）的定义，聚合指针 `getelementptr`
-- `use` 类，表示某个变量被调用
 
 Todo:
 
@@ -145,6 +144,8 @@ Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 - 高维数组
 - 短路求值
 - x86的指针与 RISCV32 的指针的区别
+
+[java_final解释](https://blog.csdn.net/tuoniaoxs/article/details/125114271)
 
 ### Optimization
 

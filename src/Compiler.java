@@ -34,7 +34,7 @@ public class Compiler
 //        PrintStream output_llvm = new PrintStream("mytest/test.ll");
 //        PrintStream output_asm = new PrintStream("mytest/test.s");
         // for OJ-test
-        PrintStream output_llvm = new PrintStream("output.ll");
+//        PrintStream output_llvm = new PrintStream("output.ll");
         PrintStream output_asm = new PrintStream("output.s");
 
         try
@@ -68,7 +68,7 @@ public class Compiler
             Program pg = new Program();
             new IRBuilder(pg, gScope, idToDef, idToFuncDef).visit(ASTRoot);
 //            new IRPrinter(System.out).visitProgram(pg);
-            new IRPrinter(output_llvm).visitProgram(pg);    // print in file
+//            new IRPrinter(output_llvm).visitProgram(pg);    // print in file
 
             // Sort of ASMBuilder, maybe opt
             new BuiltinFunctionASMPrinter("builtin.s"); // we print the buildInFunction by builtin.s
