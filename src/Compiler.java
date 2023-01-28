@@ -75,7 +75,7 @@ public class Compiler
             AsmProgram asmPg = new AsmProgram();
             new AsmBuilder(asmPg).visitProgram(pg);
 //            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
-            new livenessAnalysis(asmPg).work();
+//            new livenessAnalysis(asmPg).work();
             new regAllocation(asmPg).work();
             new AsmPrinter(output_asm, asmPg).print();
         }

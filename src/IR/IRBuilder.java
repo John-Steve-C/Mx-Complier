@@ -101,13 +101,11 @@ public class IRBuilder implements ASTVisitor {
         declareStringAppend.parameter.add(stringStar);
         declareStringAppend.parameter.add(stringStar);
         program.push_back(declareStringAppend);
-//        builtInStringAppend = new funcDef("_string_stringAppend", stringStar, declareStringAppend.parameter);
 
         declare declareStringGetStrcmp = new declare(i32, "_string_getStrcmp");
         declareStringGetStrcmp.parameter.add(stringStar);
         declareStringGetStrcmp.parameter.add(stringStar);
         program.push_back(declareStringGetStrcmp);
-//        builtInStringGetStrcmp = new funcDef("_string_getStrcmp", i32, declareStringGetStrcmp.parameter);
 
         // add global built-in functions
         declare declareToString = new declare(stringStar, "toString");
