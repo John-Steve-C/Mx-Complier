@@ -108,6 +108,7 @@ public class AsmBuilder {
                 // 多余的参数保存在虚拟寄存器中
                 virtualReg vr = (virtualReg) getReg(parameterReg);
                 vr.overflow = (parameterCnt - 8) * 4;   // calculate the location
+                virtualReg vr2 = (virtualReg) getReg(parameterReg); // maybe useless?
             }
             parameterCnt++;
         }
@@ -153,6 +154,7 @@ public class AsmBuilder {
         curFunc.tailBlock = tailBlock;
         curFunc.stackLength = 4 * (regCnt + 2);     // +2 to prevent exception
         curFunc.regCnt = regCnt;
+        curFunc.stackReserved += 3;
     }
 
     public void visitBlock(block b) {
@@ -191,7 +193,7 @@ public class AsmBuilder {
                     }
                     curBlock.push_back(new RTypeAsm(op, rd, rd, rs2));
                 } else {
-                    reg rs1 = getReg((register) binaryInst.rs1);
+//                    reg rs1 = getReg((register) binaryInst.rs1);
                     if (binaryInst.rs2 instanceof constant const2) {
                         int value2 = const2.getValue();
                         if (op == AsmInst.CalKind.mul || op == AsmInst.CalKind.div || op == AsmInst.CalKind.rem) {
@@ -203,26 +205,32 @@ public class AsmBuilder {
                                     value2 >>= 1;
                                 }
                                 if (op == AsmInst.CalKind.mul)
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sll, rd, rs1, new Imm(shiftCnt)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sll, rd, getReg((register) binaryInst.rs1), new Imm(shiftCnt)));
                                 else if (op == AsmInst.CalKind.div)
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sra, rd, rs1, new Imm(shiftCnt)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sra, rd, getReg((register) binaryInst.rs1), new Imm(shiftCnt)));
                                 else
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.and, rd, rs1, new Imm((1 << shiftCnt) - 1)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.and, rd, getReg((register) binaryInst.rs1), new Imm((1 << shiftCnt) - 1)));
                             } else {
                                 loadValue(curBlock, rd, value2);
-                                curBlock.push_back(new RTypeAsm(op, rd, rs1, rd));
+                                curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), rd));
                             }
                         } else {
                             if (op == AsmInst.CalKind.sub) {
                                 op = AsmInst.CalKind.add;
                                 value2 = -value2;
                             }
-                            loadValue(curBlock, rd, value2);
-                            curBlock.push_back(new RTypeAsm(op, rd, rs1, rd));
+                            if (value2 > 2047 || value2 < -2048) {
+                                if (((value2 >> 11) & 1) > 0) value2 += 1 << 12;
+                                curBlock.push_back(new luiAsm(rd, new Imm(value2 >>> 12)));
+                                curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, rd, new Imm(getLow12(value2))));
+                                curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), rd));
+                            } else {
+                                curBlock.push_back(new ITypeAsm(op, rd, getReg((register) binaryInst.rs1), new Imm(value2)));
+                            }
                         }
                     } else {
                         // normal form
-                        curBlock.push_back(new RTypeAsm(op, rd, rs1, getReg((register) binaryInst.rs2)));
+                        curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), getReg((register) binaryInst.rs2)));
                     }
                 }
 
@@ -248,8 +256,8 @@ public class AsmBuilder {
                         switch (in.op) {
                             case slt -> op = AsmInst.CmpKind.ge;    // < --- >=
                             case sgt -> op = AsmInst.CmpKind.le;
-                            case seq -> op = AsmInst.CmpKind.ne;    // todo: maybe not opposite?
-                            case sne -> op = AsmInst.CmpKind.eq;
+                            case seq -> op = AsmInst.CmpKind.eq;    // todo: maybe not opposite?
+                            case sne -> op = AsmInst.CmpKind.ne;
                         }
                         falseInst = new branchAsm(op, in.rs1, in.rs2, falseBlock);
                         falseBlock.jumpFrom.put(curBlock, falseInst);
@@ -257,7 +265,7 @@ public class AsmBuilder {
                         curBlock.push_back(falseInst);
                     } else if (tailInst instanceof ITypeAsm in && (in.op == AsmInst.CalKind.sne || in.op == AsmInst.CalKind.seq)) {
                         // cmp in IType
-                        AsmInst.CmpKind op = null;
+                        AsmInst.CmpKind op;
                         if (in.op == AsmInst.CalKind.sne) op = AsmInst.CmpKind.eq;
                         else op = AsmInst.CmpKind.ne;
                         falseInst = new branchAsm(op, in.rs1, null, falseBlock);
@@ -292,6 +300,9 @@ public class AsmBuilder {
                     funcCall.parameters.add(rs);
                     parameterCnt++;
                 }
+                if (callInst.parameters.size() - 7 > curFunc.callSpilledCount) {
+                    curFunc.callSpilledCount = callInst.parameters.size() - 7;
+                }
                 curBlock.push_back(funcCall);
                 // store return value
                 if (callInst.rd != null) curBlock.push_back(new moveAsm(getReg(callInst.rd), a0));
@@ -316,8 +327,15 @@ public class AsmBuilder {
                     int atomSize = irType.reducePtr().getSize();
                     if (en instanceof constant c) {
                         int constValue = c.getValue() * atomSize;
-                        loadValue(curBlock, rd, constValue);
-                        curBlock.push_back(new RTypeAsm(AsmInst.CalKind.add, rd, rs, rd));
+                        if (constValue > 2047 || constValue < -2048) {
+                            if (((constValue >> 11) & 1) > 0) constValue += 1 << 12;
+                            reg tmpReg = new virtualReg(regCnt++);
+                            curBlock.push_back(new luiAsm(tmpReg, new Imm(constValue >>> 12)));
+                            curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, tmpReg, tmpReg, new Imm(getLow12(constValue))));
+                            curBlock.push_back(new RTypeAsm(AsmInst.CalKind.add, rd, rs, tmpReg));
+                        } else {
+                            curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, rs, new Imm(constValue)));
+                        }
                     } else {
                         reg tmp = getReg((register) en);
                         if (atomSize > 1) {
