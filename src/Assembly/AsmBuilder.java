@@ -108,7 +108,7 @@ public class AsmBuilder {
                 // 多余的参数保存在虚拟寄存器中
                 virtualReg vr = (virtualReg) getReg(parameterReg);
                 vr.overflow = (parameterCnt - 8) * 4;   // calculate the location
-                virtualReg vr2 = (virtualReg) getReg(parameterReg); // maybe useless?
+//                virtualReg vr2 = (virtualReg) getReg(parameterReg); // maybe useless?
             }
             parameterCnt++;
         }
@@ -193,7 +193,7 @@ public class AsmBuilder {
                     }
                     curBlock.push_back(new RTypeAsm(op, rd, rd, rs2));
                 } else {
-//                    reg rs1 = getReg((register) binaryInst.rs1);
+                    reg rs1 = getReg((register) binaryInst.rs1);
                     if (binaryInst.rs2 instanceof constant const2) {
                         int value2 = const2.getValue();
                         if (op == AsmInst.CalKind.mul || op == AsmInst.CalKind.div || op == AsmInst.CalKind.rem) {
@@ -205,14 +205,14 @@ public class AsmBuilder {
                                     value2 >>= 1;
                                 }
                                 if (op == AsmInst.CalKind.mul)
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sll, rd, getReg((register) binaryInst.rs1), new Imm(shiftCnt)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sll, rd, rs1, new Imm(shiftCnt)));
                                 else if (op == AsmInst.CalKind.div)
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sra, rd, getReg((register) binaryInst.rs1), new Imm(shiftCnt)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.sra, rd, rs1, new Imm(shiftCnt)));
                                 else
-                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.and, rd, getReg((register) binaryInst.rs1), new Imm((1 << shiftCnt) - 1)));
+                                    curBlock.push_back(new ITypeAsm(AsmInst.CalKind.and, rd, rs1, new Imm((1 << shiftCnt) - 1)));
                             } else {
                                 loadValue(curBlock, rd, value2);
-                                curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), rd));
+                                curBlock.push_back(new RTypeAsm(op, rd, rs1, rd));
                             }
                         } else {
                             if (op == AsmInst.CalKind.sub) {
@@ -223,14 +223,14 @@ public class AsmBuilder {
                                 if (((value2 >> 11) & 1) > 0) value2 += 1 << 12;
                                 curBlock.push_back(new luiAsm(rd, new Imm(value2 >>> 12)));
                                 curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, rd, new Imm(getLow12(value2))));
-                                curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), rd));
+                                curBlock.push_back(new RTypeAsm(op, rd, rs1, rd));
                             } else {
-                                curBlock.push_back(new ITypeAsm(op, rd, getReg((register) binaryInst.rs1), new Imm(value2)));
+                                curBlock.push_back(new ITypeAsm(op, rd, rs1, new Imm(value2)));
                             }
                         }
                     } else {
                         // normal form
-                        curBlock.push_back(new RTypeAsm(op, rd, getReg((register) binaryInst.rs1), getReg((register) binaryInst.rs2)));
+                        curBlock.push_back(new RTypeAsm(op, rd, rs1, getReg((register) binaryInst.rs2)));
                     }
                 }
 
@@ -256,8 +256,8 @@ public class AsmBuilder {
                         switch (in.op) {
                             case slt -> op = AsmInst.CmpKind.ge;    // < --- >=
                             case sgt -> op = AsmInst.CmpKind.le;
-                            case seq -> op = AsmInst.CmpKind.eq;    // todo: maybe not opposite?
-                            case sne -> op = AsmInst.CmpKind.ne;
+                            case seq -> op = AsmInst.CmpKind.ne;    // todo: maybe not opposite?
+                            case sne -> op = AsmInst.CmpKind.eq;
                         }
                         falseInst = new branchAsm(op, in.rs1, in.rs2, falseBlock);
                         falseBlock.jumpFrom.put(curBlock, falseInst);
