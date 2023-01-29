@@ -29,6 +29,7 @@ public class Compiler
         CharStream input = CharStreams.fromStream(input_stream);
 //        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/lambda-package/lambda-5.mx");
 //        CharStream input = CharStreams.fromFileName("mytest/test.mx");
+//        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/mytest/test.mx");
 
         // print as file
 //        PrintStream output_llvm = new PrintStream("mytest/test.ll");

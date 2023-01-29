@@ -530,8 +530,7 @@ myNew:                                  # @myNew
 
 	.type	.L.str.1,@object        # @.str.1
 .L.str.1:
-	.asciz	"%s
-"
+	.asciz	"%s\n"
 	.size	.L.str.1, 4
 
 	.type	.L.str.2,@object        # @.str.2
@@ -541,8 +540,7 @@ myNew:                                  # @myNew
 
 	.type	.L.str.3,@object        # @.str.3
 .L.str.3:
-	.asciz	"%d
-"
+	.asciz	"%d\n"
 	.size	.L.str.3, 4
 
 	.section	".note.GNU-stack","",@progbits
