@@ -5,48 +5,27 @@ import Assembly.Operand.*;
 import Assembly.Instruction.*;
 
 public class regAllocation {
-    public AsmProgram asmProg;
+    public AsmProgram program;
     private physicalReg sp, t0, t1, t2, s0, ra, t3, t6;
     private AsmBlock tailBlock;
+    private livenessAnalysis liveAnalysis;
+
 
     private int getLow12(int constValue) {
         return (0xfffff800) * ((constValue >> 11) & 1) + (constValue & 0x7ff);
     }
 
     public regAllocation(AsmProgram asmProgram) {
-        asmProg = asmProgram;
-        ra = asmProg.physicalRegs.get(1);
-        sp = asmProg.physicalRegs.get(2);
-        t0 = asmProg.physicalRegs.get(5);   // t0-t6: temp register
-        t1 = asmProg.physicalRegs.get(6);
-        t2 = asmProg.physicalRegs.get(7);
-        s0 = asmProg.physicalRegs.get(8);
-        t3 = asmProg.physicalRegs.get(28);
-        t6 = asmProg.physicalRegs.get(31);
-    }
-
-    private void loadVirtualReg(AsmBlock block, AsmInst inst, virtualReg vReg, physicalReg rd) {
-        int value = vReg.index * 4;
-        if (value > 2047 || value < -2048) {
-            block.insert_before(new liAsm(t6, new Imm(value)), inst);
-            block.insert_before(new RTypeAsm(AsmInst.CalKind.add, t6, t6, sp), inst);
-            block.insert_before(new loadAsm(rd, t6, new Imm(0), 4), inst);
-        } else {
-            block.insert_before(new loadAsm(rd, sp, new Imm(value), 4), inst);
-        }
-    }
-
-    private void storeVirtualReg(AsmBlock block, AsmInst inst, virtualReg vReg) {
-        int value = vReg.index * 4;
-        if (value > 2047 || value < -2048) {
-            // 注意，此处指令是倒序执行
-            // 即 li -> add -> store
-            block.insert_after(new storeAsm(t2, t6, new Imm(0), 4), inst);
-            block.insert_after(new RTypeAsm(AsmInst.CalKind.add, t6, t6, sp), inst);
-            block.insert_after(new liAsm(t6, new Imm(value)), inst);
-        } else {
-            block.insert_after(new storeAsm(t2, sp, new Imm(value), 4), inst);
-        }
+        program = asmProgram;
+        ra = program.physicalRegs.get(1);
+        sp = program.physicalRegs.get(2);
+        t0 = program.physicalRegs.get(5);   // t0-t6: temp register
+        t1 = program.physicalRegs.get(6);
+        t2 = program.physicalRegs.get(7);
+        s0 = program.physicalRegs.get(8);
+        t3 = program.physicalRegs.get(28);
+        t6 = program.physicalRegs.get(31);
+        liveAnalysis = new livenessAnalysis(program);
     }
 
     private void loadValue(AsmBlock curBlock, reg rd, int value, AsmInst mark) {
@@ -86,117 +65,36 @@ public class regAllocation {
     }
 
     public void work() {
-        asmProg.functions.forEach(this::workInFunc);
+        program.functions.forEach(this::workInFunc);
     }
 
     public void workInFunc(AsmFunc func) {
-        tailBlock = null;
+        new graphColoring(program, func, liveAnalysis).work();
+        func.stackLength = (func.stackReserved + func.calleeSavedCount + func.callSpilledCount) * 4 - 4;
+
         AsmBlock rootBlock = func.rootBlock;
-        workInBlock(rootBlock);
+        tailBlock = func.tailBlock;
         AsmInst headInst = rootBlock.headInst, tailInst = tailBlock.tailInst;
         // add value to sp
         addValue(rootBlock, sp, sp, -func.stackLength, headInst);
 
-        storeValue(rootBlock, s0, func.stackLength - 8, headInst);
         storeValue(rootBlock, ra, func.stackLength - 4, headInst);
-        addValue(rootBlock, s0, sp, func.stackLength, headInst);
-
-        loadValue(tailBlock, s0, func.stackLength - 8, tailInst);
-        loadValue(tailBlock, ra, func.stackLength - 4, tailInst);
-        addValue(tailBlock, sp, sp, func.stackLength, tailInst);
-    }
-
-    public void workInBlock(AsmBlock block) {
-        // t0,t1 --- load
-        // t2 --- store
-        for (AsmInst i = block.headInst; i != null; i = i.next) {
-            if (i instanceof branchAsm br) {
-                if (br.src1 instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) br.src1, t0);
-                    br.src1 = t0;
-                }
-                if (br.src2 != null) {
-                    loadVirtualReg(block, i, (virtualReg) br.src2, t1);
-                    br.src2 = t1;
-                }
-
-            } else if (i instanceof ITypeAsm iType) {
-                if (iType.rs1 instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) iType.rs1, t0);
-                    iType.rs1 = t0;
-                }
-                if (iType.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) iType.rd);
-                    iType.rd = t2;
-                }
-
-            } else if (i instanceof liAsm li) {
-                if (li.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) li.rd);
-                    li.rd = t2;
-                }
-
-            } else if (i instanceof moveAsm mv) {
-                if (mv.rs1 instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) mv.rs1, t0);
-                    mv.rs1 = t0;
-                }
-                if (mv.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) mv.rd);
-                    mv.rd = t2;
-                }
-
-            } else if (i instanceof RTypeAsm rType) {
-                if (rType.rs1 instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) rType.rs1, t0);
-                    rType.rs1 = t0;
-                }
-                if (rType.rs2 instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) rType.rs2, t1);
-                    rType.rs2 = t1;
-                }
-                if (rType.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) rType.rd);
-                    rType.rd = t2;
-                }
-
-            } else if (i instanceof luiAsm lui) {
-                if (lui.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) lui.rd);
-                    lui.rd = t2;
-                }
-
-            } else if (i instanceof retAsm) {
-                tailBlock = block;
-
-            } else if (i instanceof loadAsm ld) {
-                if (ld.addr instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) ld.addr, t0);
-                    ld.addr = t0;
-                }
-                if (ld.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) ld.rd);
-                    ld.rd = t2;
-                }
-
-            } else if (i instanceof storeAsm st) {
-                if (st.addr instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) st.addr, t0);
-                    st.addr = t0;
-                }
-                if (st.rs instanceof virtualReg) {
-                    loadVirtualReg(block, i, (virtualReg) st.rs, t1);
-                    st.rs = t1;
-                }
-
-            } else if (i instanceof laAsm la) {
-                if (la.rd instanceof virtualReg) {
-                    storeVirtualReg(block, i, (virtualReg) la.rd);
-                    la.rd = t2;
-                }
-            }
+        int value = func.stackLength - 4;
+        func.calleeSavedUsed.set(8);
+        for (int d = func.calleeSavedUsed.nextSetBit(0); d >= 0; d = func.calleeSavedUsed.nextSetBit(d + 1)) {
+            value -= 4;
+            storeValue(rootBlock, program.physicalRegs.get(d), value, headInst);
         }
 
-        block.successors.forEach(this::workInBlock);
+        addValue(rootBlock, s0, sp, func.stackLength, headInst);
+
+        value = func.stackLength - 4;
+        for (int d = func.calleeSavedUsed.nextSetBit(0); d >= 0; d = func.calleeSavedUsed.nextSetBit(d + 1)) {
+            value -= 4;
+            loadValue(tailBlock, program.physicalRegs.get(d), value, tailInst);
+        }
+        loadValue(tailBlock, ra, func.stackLength - 4, tailInst);
+
+        addValue(tailBlock, sp, sp, func.stackLength, tailInst);
     }
 }

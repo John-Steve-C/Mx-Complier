@@ -24,9 +24,9 @@ public abstract class AsmInst {
     // liveIn = gen \lor (liveOut - kill) = use \lor (liveOut - def)
     // - (集合的差) 用 andNot 实现 a & (~b)
 
-    abstract public void fillSet();
-    abstract public void calInst();
-    abstract public boolean check();
+    abstract public void fillSet();     // 计算 def/use
+    abstract public void calInst();     // 计算 liveIn/liveOut
+    abstract public boolean check();    // 检查正确性
 
     @Override abstract public String toString();
 }

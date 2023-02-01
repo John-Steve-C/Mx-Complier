@@ -76,8 +76,13 @@ public class Compiler
             AsmProgram asmPg = new AsmProgram();
             new AsmBuilder(asmPg).visitProgram(pg);
 //            new AsmPrinter(output_asm, asmPg).print();  // print raw asmCode on screen
-//            new livenessAnalysis(asmPg).work();
+
+            // solution 1: 直接压栈
+//            new regAllocationBasic(asmPg).work();
+
+            // solution 2: 图染色
             new regAllocation(asmPg).work();
+
             new AsmPrinter(output_asm, asmPg).print();
         }
         catch (Error err)

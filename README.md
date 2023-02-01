@@ -114,6 +114,8 @@ Todo:
 - [x] 在 `statement` 中，实现对某些 LLVM IR 指令的存储和翻译，比如 `alloca`, `br`...
 - [x] 实现 `IRBuilder` 以及 `IRPrinter`
 
+---
+
 Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 
 把自己定义的 IR 转化为 assembly 输出
@@ -122,8 +124,8 @@ Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 
 - [x] 定义 Asm 中的相关指令，得到大致的 Asm code 框架
 - [x] 输出大致的 Asm，实现 AsmBuilder
-- [x] 进行 [liveness analysis](https://en.wikipedia.org/wiki/Live-variable_analysis)（live variable analysis），即变量的活跃性分析
-- [x] 进行寄存器分配（把用数字编号的虚拟寄存器，转化为RV32I指令集的通用寄存器）
+- [x] 进行基本的寄存器分配（把用数字编号的虚拟寄存器，转化为RV32I指令集的通用寄存器）
+  - 策略：直接压栈(sp), 利用临时寄存器 t0-t6 进行中转
 - [x] 实现 AsmPrinter，得到 `.s` 文件
 
 > 检查正确性：
@@ -151,4 +153,10 @@ Assembly Language 即汇编语言（RISC-V），可以简写为 ASM。
 
 对 codegen 阶段进行优化，加快速度
 
-包括图染色等算法？
+- [x] [图染色](https://www.cnblogs.com/AANA/p/16315859.html)，优化寄存器分配
+  
+  ![](https://aana.oss-cn-shenzhen.aliyuncs.com/b64542425e1cdba4/graphColoringWorkflow.png)
+  
+  - [x] 进行 [liveness analysis](https://en.wikipedia.org/wiki/Live-variable_analysis)（live variable analysis），即变量的活跃性分析
+- [ ] Mem2Reg
+- [ ] IR optimize

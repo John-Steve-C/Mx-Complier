@@ -22,7 +22,7 @@ public class AsmBuilder {
     private HashSet<block> blockVisited;
     private AsmFunc curFunc = null;
     private AsmBlock tailBlock = null;
-    private LinkedList<phi> Phis = new LinkedList<>();
+    private final LinkedList<phi> Phis = new LinkedList<>();
 
 
     public AsmBuilder(AsmProgram program) {
@@ -63,17 +63,18 @@ public class AsmBuilder {
     }
 
     private int getLow12(int constValue) {
-        // 取出 constValue 的低 12 位
-        // (constValue >> 11) & 1 取出第 12 位。高位补1
-        // 2^11 - 1 = 0x7ff (后 11 位)
+        // (constValue & 0x7ff) : 取出 constValue 的后 11 位
+        // (constValue >> 11) & 1 : 取出第 12 位
+        // * 0xfffff800 : 高位补 1 视作负数 (操作数为 int, 考虑符号位)
         return (0xfffff800) * ((constValue >> 11) & 1) + (constValue & 0x7ff);
     }
 
     private void loadValue(AsmBlock curBlock, reg rd, int value) {
         if (value > 2047 || value < -2048) {
-            if (((value >> 11) & 1) > 0) value += 1 << 12;
-            curBlock.push_back(new luiAsm(rd, new Imm(value >>> 12)));   // >>> 为无符号右移
-            curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, rd, new Imm(getLow12(value))));
+            // 把 value 分成 高20位 和 低12位 进行操作
+            if (((value >> 11) & 1) > 0) value += 1 << 12;  // 考虑负数的补码操作
+            curBlock.push_back(new luiAsm(rd, new Imm(value >>> 12)));   // >>> 为无符号右移(高位补0)，载入高20位
+            curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, rd, new Imm(getLow12(value)))); // 低12位
         } else {
             curBlock.push_back(new ITypeAsm(AsmInst.CalKind.add, rd, zero, new Imm(value)));
         }
@@ -153,7 +154,7 @@ public class AsmBuilder {
         }
         curFunc.tailBlock = tailBlock;
         curFunc.stackLength = 4 * (regCnt + 2);     // +2 to prevent exception
-        curFunc.regCnt = regCnt;
+        curFunc.regCnt = curFunc.originRegCnt = regCnt;
         curFunc.stackReserved += 3;
     }
 
@@ -256,7 +257,7 @@ public class AsmBuilder {
                         switch (in.op) {
                             case slt -> op = AsmInst.CmpKind.ge;    // < --- >=
                             case sgt -> op = AsmInst.CmpKind.le;
-                            case seq -> op = AsmInst.CmpKind.ne;    // todo: maybe not opposite?
+                            case seq -> op = AsmInst.CmpKind.ne;    //
                             case sne -> op = AsmInst.CmpKind.eq;
                         }
                         falseInst = new branchAsm(op, in.rs1, in.rs2, falseBlock);

@@ -4,9 +4,7 @@ import Assembly.*;
 import Assembly.Instruction.*;
 
 import java.util.BitSet;
-import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Queue;
 
 public class livenessAnalysis {
     public AsmProgram program;
@@ -28,6 +26,7 @@ public class livenessAnalysis {
         BitSet preOut = inst.liveOut;
         inst.calInst();
         return !preIn.equals(inst.liveIn) || !preOut.equals(inst.liveOut);
+        // 相等返回 false, 表示没发生修改, 已经计算过
     }
 
     public void work() {
