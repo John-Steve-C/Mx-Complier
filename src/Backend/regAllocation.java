@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 public class regAllocation {
     public AsmProgram program;
-    public ArrayList<physicalReg> phyRegs;
 
     private physicalReg sp, t0, t1, t2, s0, ra, t3, t6;
     private AsmBlock tailBlock;
@@ -30,7 +29,6 @@ public class regAllocation {
         t3 = asmPg.physicalRegs.get(28);
         t6 = asmPg.physicalRegs.get(31);
         liveAnalysis = new livenessAnalysis(asmPg);
-        phyRegs = asmPg.physicalRegs;
     }
 
     private int loadValue(AsmBlock curBlock, reg rd, int value, AsmInst mark) {

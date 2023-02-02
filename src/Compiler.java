@@ -81,7 +81,7 @@ public class Compiler
 //            new regAllocationBasic(asmPg).work();
 
             // solution 2: 图染色
-            new livenessAnalysis(asmPg).work();
+//            new livenessAnalysis(asmPg).work();
             new regAllocation(asmPg).work();
 
             new AsmPrinter(output_asm, asmPg).print();

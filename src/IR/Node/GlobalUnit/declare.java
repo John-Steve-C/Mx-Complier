@@ -6,7 +6,7 @@ import IR.Node.Instruction.instruction;
 import java.util.ArrayList;
 
 public class declare extends globalUnit {
-    // function declare
+    // builtin-function declare
     public IRType returnType = null;
     public ArrayList<IRType> parameter = new ArrayList<>();
     public String funcName = null;
