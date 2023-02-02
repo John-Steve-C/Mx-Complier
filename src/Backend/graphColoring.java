@@ -7,7 +7,7 @@ import Assembly.Operand.*;
 import java.util.*;
 
 public class graphColoring {
-    private static int times = 0;
+//    private static int times = 0;
     private enum InWhichNodeSet {
         INITIAL, PRECOLORED, SIMPLIFYWORKLIST, FREEZEWORKLIST, SPILLEDNODES, COALESCEDNODES, COLOREDNODES, SELECTSTACK
     }
@@ -28,8 +28,8 @@ public class graphColoring {
     private ArrayList<InWhichNodeSet> inWhichNodeSets;  // 每个点的状态
     private int finalRegCount;
     private final double[] myExp = {0, 10, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18};
-    private physicalReg s0;
-    private ArrayList<physicalReg> phyRegs;
+    private final physicalReg s0;
+    private final ArrayList<physicalReg> phyRegs;
     private BitSet colorSet = new BitSet(K), callerSavedSet = new BitSet(K), calleeSavedUsed = new BitSet(32);
     // 每个物理寄存器就是一种颜色
 
@@ -92,7 +92,7 @@ public class graphColoring {
 //            System.out.println(spilledNodes);
 
             RewriteProgram();
-            this.work();
+            work();
         }
     }
 
@@ -226,10 +226,9 @@ public class graphColoring {
                     worklistMoves.add(i);
                 }
                 live.or(i.def);
-                BitSet def = i.def;
                 // nextSetBit(i) : 返回从第 i 位往后的第一个 '1' 的 index, 不存在则为 -1
                 // 此循环相当于遍历整个 Bitset
-                for (int d = def.nextSetBit(0); d >= 0; d = def.nextSetBit(d + 1)) {
+                for (int d = i.def.nextSetBit(0); d >= 0; d = i.def.nextSetBit(d + 1)) {
                     for (int l = live.nextSetBit(0); l >= 0; l = live.nextSetBit(l + 1)) {
                         AddEdge(l, d);
                     }

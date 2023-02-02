@@ -25,18 +25,18 @@ public class Compiler
 {
     public static void main(String[] args) throws IOException
     {
-        InputStream input_stream = System.in;
-        CharStream input = CharStreams.fromStream(input_stream);
+//        InputStream input_stream = System.in;
+//        CharStream input = CharStreams.fromStream(input_stream);
 //        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/testcases/sema/lambda-package/lambda-5.mx");
-//        CharStream input = CharStreams.fromFileName("mytest/test.mx");
+        CharStream input = CharStreams.fromFileName("mytest/test.mx");
 //        CharStream input = CharStreams.fromFileName("/mnt/d/Coding/Mx_Compiler/mytest/test.mx");
 
         // print as file
 //        PrintStream output_llvm = new PrintStream("mytest/test.ll");
-//        PrintStream output_asm = new PrintStream("mytest/test.s");
+        PrintStream output_asm = new PrintStream("mytest/test.s");
         // for OJ-test
 //        PrintStream output_llvm = new PrintStream("output.ll");
-        PrintStream output_asm = new PrintStream("output.s");
+//        PrintStream output_asm = new PrintStream("output.s");
 
         try
         {

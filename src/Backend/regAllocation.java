@@ -4,14 +4,12 @@ import Assembly.*;
 import Assembly.Operand.*;
 import Assembly.Instruction.*;
 
-import java.util.ArrayList;
-
 public class regAllocation {
     public AsmProgram program;
 
-    private physicalReg sp, t0, t1, t2, s0, ra, t3, t6;
+    private final physicalReg sp, t0, t1, t2, s0, ra, t3, t6;
     private AsmBlock tailBlock;
-    private livenessAnalysis liveAnalysis;
+    private final livenessAnalysis liveAnalysis;
 
 
     private int getLow12(int value) {
