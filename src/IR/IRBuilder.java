@@ -43,7 +43,7 @@ public class IRBuilder implements ASTVisitor {
     // some define constant & type;
     private final IRType voidType = new IRType(), i1 = new IRType(1), i8 = new IRType(8), i32 = new IRType(32),
             i8Star = i8.getPtr(), stringStar = new IRType(0, 1, 0, null), i32Star = i32.getPtr();
-    // todo: stringStar should be i8*?
+    // i8Star: constString;      stringStar: string
     private final constant constZero = new constant(0), constVoid = new constant(), constUnit = new constant(1), constFull = new constant(-1);
 
     public IRBuilder(Program p, GlobalScope gscope, HashMap<String, classDef> idToClsDef, HashMap<String, funcDef> idToFuncDef) {
@@ -190,11 +190,11 @@ public class IRBuilder implements ASTVisitor {
         FuncType func;
         if (currentStruct != null) {
             func = currentStruct.method.get(it.funcName);
-            IRType tmpType = new IRType(idToClsDef.get(currentStruct.name), 1, 0);
+            IRType tmpType = new IRType(idToClsDef.get(currentStruct.name), 1, 0);  // 有指针
             register rd = new register(), rs = new register();
 
-            // add *this pointer for struct
-            currentFunc.parameterRegs.add(rs);
+            // add *this pointer for struct member function
+            currentFunc.parameterRegs.add(rs);  // add 'this' as a parameter
             currentScope.defineVar("this", currentStruct, it.pos);
             currentScope.linkReg("this", rd, tmpType.getPtr());
 
@@ -210,7 +210,7 @@ public class IRBuilder implements ASTVisitor {
             if (currentFunc.returnType.ptrNum > 0) en = constVoid;
             else en = constZero;
             alloca Alloca = new alloca(currentFunc.retReg, currentFunc.returnType);
-            currentBlock.push_back(new store(en, currentFunc.retReg, currentFunc.returnType));
+            currentBlock.push_back(new store(en, currentFunc.retReg, currentFunc.returnType));  // retReg 初始化
             currentFunc.push_back(Alloca);
         }
 
@@ -235,6 +235,7 @@ public class IRBuilder implements ASTVisitor {
             }
         }
 
+        // function body
         funcSuite = true;
         it.compoundStmt.accept(this);
         if (currentBlock.tail == null) {
@@ -265,7 +266,7 @@ public class IRBuilder implements ASTVisitor {
         if (it.stmtList != null) {
             boolean flag = false;
             if (!funcSuite) currentScope = new Scope(currentScope);
-            else {
+            else {  // scope has been changed in function
                 funcSuite = false;
                 flag = true;
             }
@@ -309,6 +310,7 @@ public class IRBuilder implements ASTVisitor {
                 }
                 currentBlock.push_back(new br(null, coverBlock, null));
             } else {
+                // 一般情况
                 register rdCmp;
                 if (it.cond.irType.intLen != 1) {
                     rdCmp = new register();
@@ -1107,7 +1109,7 @@ public class IRBuilder implements ASTVisitor {
             int size = it.irType.cDef.getSize();
             register receive_ptr = new register();
             currentFunc.directCall.add(builtInFunc);
-            currentFunc.directCall.add(builtInFunc);    // todo: wrong?
+//            currentFunc.directCall.add(builtInFunc);    // todo: wrong?
             call Call = new call(receive_ptr, i8Star, "myNew", builtInFunc);
             Call.push_back(new entityTypePair(new constant(size), i32));
             currentBlock.push_back(Call);
@@ -1422,6 +1424,7 @@ public class IRBuilder implements ASTVisitor {
     //----------------------------------------------------------------------------------------------------------
 
     private register constStringToString(expressionNode firstExpr) {
+        // i8Star -> stringStar
         IRType firstIRType = firstExpr.irType;
         register receiveReg = new register(), afterCast = new register(), rdLen = new register(), rdCptr = new register(), i8Ptr = new register();
         currentFunc.directCall.add(builtInFunc);

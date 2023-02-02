@@ -13,16 +13,16 @@ public class regAllocationBasic {
         return (0xfffff800) * ((constValue >> 11) & 1) + (constValue & 0x7ff);
     }
 
-    public regAllocationBasic(AsmProgram asmProgram) {
-        program = asmProgram;
-        ra = program.physicalRegs.get(1);
-        sp = program.physicalRegs.get(2);
-        t0 = program.physicalRegs.get(5);   // t0-t6: temp register
-        t1 = program.physicalRegs.get(6);
-        t2 = program.physicalRegs.get(7);
-        s0 = program.physicalRegs.get(8);
-        t3 = program.physicalRegs.get(28);
-        t6 = program.physicalRegs.get(31);
+    public regAllocationBasic(AsmProgram asmPg) {
+        program = asmPg;
+        ra = asmPg.physicalRegs.get(1);
+        sp = asmPg.physicalRegs.get(2);
+        t0 = asmPg.physicalRegs.get(5);   // t0-t6: temp register
+        t1 = asmPg.physicalRegs.get(6);
+        t2 = asmPg.physicalRegs.get(7);
+        s0 = asmPg.physicalRegs.get(8);
+        t3 = asmPg.physicalRegs.get(28);
+        t6 = asmPg.physicalRegs.get(31);
     }
 
     private void loadVirtualReg(AsmBlock block, AsmInst inst, virtualReg vReg, physicalReg rd) {
